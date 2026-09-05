@@ -7,7 +7,7 @@
   <meta name="description" content="Controle particular de clientes, vendas, renovações e vencimentos da JS Tech.">
   <title>JS Tech | Controle de Clientes</title>
   <link rel="stylesheet" href="styles.css">
-  <style>.lifetime-option{display:flex!important;align-items:center;gap:10px}.lifetime-option input{width:auto!important;margin:0}.app-meta{display:block;color:#7f90a8;font-size:11px;margin-top:3px}</style>
+  <style>.lifetime-option{display:flex!important;align-items:center;gap:10px}.lifetime-option input{width:auto!important;margin:0}.app-meta{display:block;color:#7f90a8;font-size:11px;margin-top:3px}.android-app-card{border:1px solid #22334b;background:#102039;border-radius:14px;padding:16px}.android-app-card strong{display:block;font-size:16px}.android-app-card span{display:block;color:#91a0b6;font-size:12px;margin-top:6px}.android-apps-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;padding:0 22px 22px}</style>
 </head>
 <body>
   <section id="loginScreen" class="login-screen">
@@ -41,6 +41,7 @@
         <button class="nav-item" data-filter="vencidos"><span>!</span> Vencidos</button>
         <button class="nav-item" data-filter="ativos"><span>✓</span> Ativos</button>
         <button class="nav-item" data-filter="cancelados"><span>×</span> Cancelados</button>
+        <button class="nav-item" data-view="apps"><span>▦</span> Aplicativos Android</button>
       </nav>
       <div class="sidebar-foot">
         <p id="connectedEmail">Banco de dados sincronizado.</p>
@@ -90,6 +91,14 @@
             <button class="primary" id="emptyAddBtn">Adicionar primeiro cliente</button>
           </div>
         </div>
+      </section>
+
+      <section id="androidAppsSection" class="panel" hidden>
+        <div class="panel-head">
+          <div><h2>Aplicativos Android</h2><p>Catálogo de aplicativos disponíveis para os clientes.</p></div>
+          <button class="ghost" id="refreshAppsBtn" type="button">Atualizar lista</button>
+        </div>
+        <div id="androidAppsGrid" class="android-apps-grid"></div>
       </section>
     </main>
   </div>
