@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#08111f">
+  <meta name="description" content="Controle particular de clientes, vendas, renovações e vencimentos da JS Tech.">
+  <title>JS Tech | Controle de Clientes</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <section id="loginScreen" class="login-screen">
+    <div class="login-card">
+      <div class="brand login-brand"><div class="brand-mark">JS</div><div><strong>JS Tech</strong><span>Controle particular</span></div></div>
+      <p class="eyebrow">Acesso protegido</p>
+      <h1>Entre no seu painel</h1>
+      <p class="login-copy">Seus clientes, vendas e vencimentos em um só lugar.</p>
+      <form id="loginForm">
+        <label>E-mail<input id="loginEmail" type="email" required autocomplete="username" placeholder="seu@email.com"></label>
+        <label>Senha<input id="loginPassword" type="password" required minlength="6" autocomplete="current-password" placeholder="Sua senha"></label>
+        <p id="loginError" class="form-error" role="alert"></p>
+        <button id="loginBtn" class="primary full" type="submit">Entrar</button>
+      </form>
+      <button id="showSignupBtn" class="text-button">Primeiro acesso? Criar minha senha</button>
+      <p class="login-note">Apenas o e-mail autorizado consegue visualizar ou alterar os registros.</p>
+    </div>
+  </section>
+
+  <div id="appShell" class="app-shell" hidden>
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">JS</div>
+        <div><strong>JS Tech</strong><span>Controle particular</span></div>
+      </div>
+      <nav aria-label="Menu principal">
+        <button class="nav-item active" data-filter="todos"><span>⌂</span> Visão geral</button>
+        <button class="nav-item" data-filter="hoje"><span>◷</span> Vencem hoje</button>
+        <button class="nav-item" data-filter="amanha"><span>↗</span> Vencem amanhã</button>
+        <button class="nav-item" data-filter="proximos"><span>▤</span> Próximos 5 dias</button>
+        <button class="nav-item" data-filter="vencidos"><span>!</span> Vencidos</button>
+        <button class="nav-item" data-filter="ativos"><span>✓</span> Ativos</button>
+        <button class="nav-item" data-filter="cancelados"><span>×</span> Cancelados</button>
+      </nav>
+      <div class="sidebar-foot">
+        <p id="connectedEmail">Banco de dados sincronizado.</p>
+        <button id="exportBtn" class="ghost full">Fazer backup</button>
+        <label class="ghost full file-button">Restaurar backup<input id="importInput" type="file" accept="application/json"></label>
+        <button id="logoutBtn" class="text-button full">Sair do painel</button>
+      </div>
+    </aside>
+
+    <main>
+      <header class="topbar">
+        <div>
+          <p class="eyebrow" id="todayText"></p>
+          <h1>Controle de vencimentos</h1>
+        </div>
+        <button class="primary" id="newClientBtn">+ Adicionar cliente</button>
+      </header>
+
+      <section class="summary-grid" aria-label="Resumo">
+        <article class="summary-card blue"><span>Vencem hoje</span><strong id="countToday">0</strong><small id="valueToday">R$ 0,00</small></article>
+        <article class="summary-card amber"><span>Próximos 5 dias</span><strong id="countSoon">0</strong><small id="valueSoon">R$ 0,00</small></article>
+        <article class="summary-card red"><span>Vencidos</span><strong id="countOverdue">0</strong><small id="valueOverdue">R$ 0,00</small></article>
+        <article class="summary-card green"><span>Clientes ativos</span><strong id="countActive">0</strong><small id="monthRevenue">R$ 0,00 no mês</small></article>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <div><h2 id="listTitle">Todos os clientes</h2><p id="listSubtitle">Acompanhe as próximas renovações.</p></div>
+          <div class="tools">
+            <label class="search"><span>⌕</span><input id="searchInput" type="search" placeholder="Buscar nome ou telefone"></label>
+            <select id="sortSelect" aria-label="Ordenar clientes">
+              <option value="due">Vencimento mais próximo</option>
+              <option value="name">Nome de A a Z</option>
+              <option value="recent">Cadastro mais recente</option>
+            </select>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Cliente</th><th>Aplicativo</th><th>Plano</th><th>Vencimento</th><th>Valor</th><th>Situação</th><th>Ações</th></tr></thead>
+            <tbody id="clientRows"></tbody>
+          </table>
+          <div id="emptyState" class="empty" hidden>
+            <div class="empty-icon">＋</div>
+            <h3>Nenhum cliente aqui</h3>
+            <p>Cadastre a primeira venda para começar o controle das datas.</p>
+            <button class="primary" id="emptyAddBtn">Adicionar primeiro cliente</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="clientDialog" class="modal">
+    <form id="clientForm">
+      <div class="modal-head"><div><p class="eyebrow">Cadastro particular</p><h2 id="formTitle">Novo cliente</h2></div><button type="button" class="icon-btn close-dialog" aria-label="Fechar">×</button></div>
+      <input type="hidden" id="clientId">
+      <div class="form-grid">
+        <label class="wide">Nome do cliente<input id="name" required autocomplete="name" placeholder="Ex.: Maria Aparecida"></label>
+        <label>Telefone/WhatsApp<input id="phone" required inputmode="tel" placeholder="(27) 99999-9999"></label>
+        <label>Aplicativo<input id="appName" required list="apps" placeholder="Ex.: Laza Play"></label>
+        <datalist id="apps"><option>Laza Play</option><option>XCIPTV</option><option>IPTV Smarters</option><option>Duplex Play</option><option>IBO Player</option><option>SmartOne IPTV</option></datalist>
+        <label>Data da ativação<input id="startDate" type="date" required></label>
+        <label>Plano contratado<select id="plan" required><option value="30d">30 dias</option><option value="3m">3 meses</option><option value="6m">6 meses</option><option value="1y">1 ano</option></select></label>
+        <label>Valor pago (R$)<input id="value" type="number" min="0" step="0.01" required placeholder="35,00"></label>
+        <label>Forma de pagamento<select id="payment"><option>Pix</option><option>Dinheiro</option><option>Cartão</option><option>Transferência</option><option>Outro</option></select></label>
+        <label class="wide">Observações<textarea id="notes" rows="2" placeholder="Informação opcional"></textarea></label>
+      </div>
+      <div class="date-preview"><span>Vencimento calculado</span><strong id="datePreview">—</strong></div>
+      <div class="modal-actions"><button type="button" class="ghost close-dialog">Cancelar</button><button type="submit" class="primary">Salvar cliente</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="messageDialog" class="modal message-modal">
+    <div class="modal-head"><div><p class="eyebrow">Mensagem pronta</p><h2 id="messageTitle">Ativação realizada</h2></div><button class="icon-btn close-message" aria-label="Fechar">×</button></div>
+    <textarea id="messageText" rows="10" readonly></textarea>
+    <div class="modal-actions"><button class="ghost" id="copyMessageBtn">Copiar mensagem</button><button class="whatsapp" id="openWhatsappBtn">Abrir WhatsApp</button></div>
+  </dialog>
+
+  <dialog id="historyDialog" class="modal history-modal">
+    <div class="modal-head"><div><p class="eyebrow">Cliente</p><h2 id="historyTitle">Histórico</h2></div><button class="icon-btn close-history" aria-label="Fechar">×</button></div>
+    <div id="historyContent" class="timeline"></div>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="app.js"></script>
+</body>
+</html>
