@@ -7,7 +7,7 @@
   <meta name="description" content="Controle particular de clientes, vendas, renovações e vencimentos da JS Tech.">
   <title>JS Tech | Controle de Clientes</title>
   <link rel="stylesheet" href="styles.css">
-  <style>.lifetime-option{display:flex!important;align-items:center;gap:10px}.lifetime-option input{width:auto!important;margin:0}.app-meta{display:block;color:#7f90a8;font-size:11px;margin-top:3px}.android-app-card{border:1px solid #22334b;background:#102039;border-radius:14px;padding:16px}.android-app-card strong{display:block;font-size:16px}.android-app-card span{display:block;color:#91a0b6;font-size:12px;margin-top:6px}.android-apps-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;padding:0 22px 22px}</style>
+  <style>.lifetime-option{display:flex!important;align-items:center;gap:10px}.lifetime-option input{width:auto!important;margin:0}.app-meta{display:block;color:#7f90a8;font-size:11px;margin-top:3px}.android-app-card{border:1px solid #22334b;background:#102039;border-radius:14px;padding:16px}.android-app-card strong{display:block;font-size:16px}.android-app-card span{display:block;color:#91a0b6;font-size:12px;margin-top:6px}.android-apps-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;padding:0 22px 22px}.device-section{display:grid;gap:10px}.device-section-head{display:flex;justify-content:space-between;align-items:center;color:#aebacf}.small{padding:7px 10px;font-size:12px}.device-list{display:grid;gap:10px}.device-entry{display:grid;grid-template-columns:1fr 1.2fr 1.2fr 1.2fr 90px 36px;gap:8px;padding:10px;border:1px solid #22334b;border-radius:12px;background:#0a1626}.device-entry label{display:grid;gap:5px;color:#91a0b6;font-size:11px}.device-entry input,.device-entry select{width:100%;padding:8px;font-size:12px}.remove-device{align-self:end;height:36px;border:1px solid #63313c;background:#2b1820;color:#ff8793;border-radius:8px;font-size:18px}.device-apps-meta{display:block;color:#7f90a8;font-size:11px;margin-top:3px;max-width:180px;white-space:normal}</style>
 </head>
 <body>
   <section id="loginScreen" class="login-screen">
@@ -110,8 +110,11 @@
       <div class="form-grid">
         <label class="wide">Nome do cliente<input id="name" required autocomplete="name" placeholder="Ex.: Maria Aparecida"></label>
         <label>Telefone/WhatsApp<input id="phone" required inputmode="tel" placeholder="(27) 99999-9999"></label>
-        <label>Aplicativo<input id="appName" required list="apps" placeholder="Ex.: Laza Play"></label>
-        <datalist id="apps"></datalist>
+        <div class="wide device-section">
+          <div class="device-section-head"><strong>Aplicativos e dispositivos</strong><button type="button" class="ghost small" id="addDeviceBtn">+ Adicionar outro</button></div>
+          <div id="devicesList" class="device-list"></div>
+          <datalist id="apps"></datalist>
+        </div>
         <label>Data da ativação<input id="startDate" type="date" required></label>
         <label>Plano contratado<select id="plan" required><option value="30d">30 dias</option><option value="3m">3 meses</option><option value="6m">6 meses</option><option value="1y">1 ano</option></select></label>
         <label>Quantidade de telas<select id="screens" required><option value="1">1 tela</option><option value="2">2 telas</option><option value="3">3 telas</option><option value="4">4 telas</option><option value="5">5 telas</option><option value="6">6 telas</option><option value="7">7 telas</option><option value="8">8 telas</option><option value="9">9 telas</option><option value="10">10 telas</option></select></label>
