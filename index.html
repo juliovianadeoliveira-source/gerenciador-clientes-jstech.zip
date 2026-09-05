@@ -232,6 +232,12 @@
     <div id="historyContent" class="timeline"></div>
   </dialog>
 
+  <dialog id="clientDataDialog" class="modal history-modal">
+    <div class="modal-head"><div><p class="eyebrow">Ficha completa</p><h2 id="clientDataTitle">Dados do cliente</h2></div><button class="icon-btn close-client-data" aria-label="Fechar">×</button></div>
+    <div id="clientDataContent" class="client-data-content"></div>
+    <div class="modal-actions"><button class="ghost" id="copyClientDataBtn" type="button">Copiar todos os dados</button><button class="primary close-client-data" type="button">Fechar</button></div>
+  </dialog>
+
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <script src="app.js"></script>
 </body>
