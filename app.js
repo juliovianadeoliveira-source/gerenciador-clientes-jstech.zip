@@ -1,7 +1,8 @@
 const SUPABASE_URL='https://yifgptxujimzsjoeghte.supabase.co';
 const SUPABASE_KEY='sb_publishable_TGA26mIiNQ686GJrvQI3aw_PmfP8V1-';
 const SESSION_KEY='jstech_supabase_session';
-let session=null,clients=[],activeFilter='todos',messageClientId=null;
+let session=null,clients=[],activeFilter='todos',messageClientId=null,androidApps=[];
+const ANDROID_APPS_DEFAULT=['Magic Player','Brasil IPTV','Box Player','Vizzion Play','Powerplay','Epicplay','Assist+','Playsim','JJ Player','Duo TV','Mult Box','Sync21 Player','UP Play','Max21','XCIPTV Player','Smarters Player','Duna XTP','Touro Box MOD','Touro Box T7 V5','XPlus 7.0','YouCine MOD','Uni Revenda','GPC Pro','Blessed Player','Fun Play','Lazer Play','Power Play','Super Play','XCloud TV'];
 const $=id=>document.getElementById(id);
 const money=value=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(Number(value)||0);
 const dateBR=date=>date?new Intl.DateTimeFormat('pt-BR').format(parseDate(date)):'—';
@@ -31,6 +32,31 @@ function render(){renderSummary();let list=clients.filter(matchesFilter).filter(
 function matchesFilter(c){const s=statusOf(c),days=diffDays(c.dueDate);if(activeFilter==='todos')return true;if(activeFilter==='amanha')return !c.cancelled&&!c.lifetime&&days===1;if(activeFilter==='proximos')return !c.cancelled&&!c.lifetime&&days>=1&&days<=5;return s.key===activeFilter}
 function renderSummary(){const valid=clients.filter(c=>!c.cancelled),now=today(),todayList=valid.filter(c=>!c.lifetime&&diffDays(c.dueDate)===0),soon=valid.filter(c=>!c.lifetime&&diffDays(c.dueDate)>=1&&diffDays(c.dueDate)<=5),overdue=valid.filter(c=>!c.lifetime&&diffDays(c.dueDate)<0),active=valid.filter(c=>c.lifetime||diffDays(c.dueDate)>=0),monthSales=clients.filter(c=>{const d=parseDate(c.startDate);return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear()});$('countToday').textContent=todayList.length;$('valueToday').textContent=sum(todayList);$('countSoon').textContent=soon.length;$('valueSoon').textContent=sum(soon);$('countOverdue').textContent=overdue.length;$('valueOverdue').textContent=sum(overdue);$('countActive').textContent=active.length;$('monthRevenue').textContent=`${sum(monthSales)} no mês`}
 function sum(list){return money(list.reduce((total,c)=>total+Number(c.value),0))}
+function renderAndroidApps(){
+  const grid=$('androidAppsGrid');
+  if(!grid)return;
+  grid.innerHTML=androidApps.map(name=>`<article class="android-app-card"><strong>${escapeHTML(name)}</strong><span>Aplicativo Android</span></article>`).join('');
+  const list=$('apps');
+  if(list)list.innerHTML=androidApps.map(name=>`<option>${escapeHTML(name)}</option>`).join('');
+}
+async function loadAndroidApps(){
+  try{
+    const rows=await api('/rest/v1/android_apps?select=name&active=eq.true&order=name.asc');
+    androidApps=rows.map(row=>row.name).filter(Boolean);
+    if(!androidApps.length)throw new Error('empty');
+  }catch{
+    androidApps=[...ANDROID_APPS_DEFAULT];
+  }
+  renderAndroidApps();
+}
+function setPanelView(view){
+  const apps=view==='apps';
+  document.querySelector('.topbar').hidden=apps;
+  document.querySelector('.summary-grid').hidden=apps;
+  document.querySelector('.panel:not(#androidAppsSection)').hidden=apps;
+  $('androidAppsSection').hidden=!apps;
+  if(apps)loadAndroidApps();
+}
 function clientRow(c){const s=statusOf(c);let dueText='—',hint='';if(c.lifetime){dueText='Vitalício';hint='Sem vencimento'}else{const days=diffDays(c.dueDate);dueText=dateBR(c.dueDate);hint=days<0?`${Math.abs(days)} dia${Math.abs(days)>1?'s':''} atrasado`:days===0?'É hoje':days===1?'Amanhã':`Faltam ${days} dias`};if(c.cancelled)hint='Sem renovação';const screens=c.screens>1?` · ${c.screens} telas`:'';return `<tr><td class="client-name"><strong>${escapeHTML(c.name)}</strong><span>${escapeHTML(c.phone)}</span></td><td>${escapeHTML(c.appName)}</td><td>${planLabel(c.plan,c.lifetime)}${c.lifetime||c.screens>1?`<span class="app-meta">${c.lifetime?'Vitalício':''}${c.lifetime&&c.screens>1?' · ':''}${c.screens>1?c.screens+' telas':''}</span>`:''}</td><td class="date-cell"><strong>${dueText}</strong><span>${hint}</span></td><td><strong>${money(c.value)}</strong></td><td><span class="badge ${s.color}">${s.label}</span></td><td><div class="actions">${c.lifetime?'':`<button class="action-btn renew" onclick="renewClient('${c.id}')">Renovar</button>`}<button class="action-btn" onclick="sendCharge('${c.id}')">WhatsApp</button><details class="more"><summary class="action-btn">•••</summary><div class="more-menu"><button onclick="editClient('${c.id}')">Editar</button><button onclick="showHistory('${c.id}')">Histórico</button><button onclick="toggleCancel('${c.id}')">${c.cancelled?'Reativar':'Cancelar'}</button><button class="danger" onclick="deleteClient('${c.id}')">Excluir</button></div></details></div></td></tr>`}
 function openForm(client=null){$('clientForm').reset();$('clientId').value=client?.id||'';$('formTitle').textContent=client?'Editar cliente':'Novo cliente';$('startDate').value=client?.startDate||isoToday();$('plan').value=client?.plan||'30d';$('screens').value=String(client?.screens||1);$('lifetime').checked=!!client?.lifetime;toggleLifetimeFields();if(client){$('name').value=client.name;$('phone').value=client.phone;$('appName').value=client.appName;$('value').value=client.value;$('payment').value=client.payment;$('notes').value=client.notes||''}updatePreview();$('clientDialog').showModal()}
 function toggleLifetimeFields(){const lifetime=$('lifetime').checked;$('plan').disabled=lifetime;$('datePreview').textContent=lifetime?'Vitalício — sem vencimento':($('startDate').value?dateBR(calculateDue($('startDate').value,$('plan').value)):'—')}
@@ -53,9 +79,17 @@ $('logoutBtn').addEventListener('click',async()=>{try{await api('/auth/v1/logout
 $('clientForm').addEventListener('submit',async e=>{e.preventDefault();const id=$('clientId').value,existing=clients.find(c=>c.id===id),oldDue=existing?.dueDate||null,lifetime=$('lifetime').checked,screens=Math.max(1,Math.min(99,Number($('screens').value)||1)),data={name:$('name').value.trim(),phone:$('phone').value.trim(),appName:$('appName').value.trim(),startDate:$('startDate').value,plan:$('plan').value,value:Number($('value').value),payment:$('payment').value,notes:$('notes').value.trim(),cancelled:existing?.cancelled||false,lifetime,screens};data.dueDate=lifetime?(existing?.dueDate||calculateDue(data.startDate,data.plan)):calculateDue(data.startDate,data.plan);try{setBusy(true);if(existing){await api(`/rest/v1/clients?id=eq.${id}`,{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify(fromClient(data))});Object.assign(existing,data);await addHistory(existing,'update',oldDue,data.dueDate,`Cadastro atualizado${lifetime?' · plano vitalício':''}${screens>1?` · ${screens} telas`:''}`);$('clientDialog').close();render();showToast('Cadastro atualizado.')}else{const rows=await api('/rest/v1/clients',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify(fromClient(data))});const c=toClient(rows[0]);clients.push(c);await addHistory(c,'sale',null,c.dueDate,`Venda cadastrada: ${planLabel(c.plan,c.lifetime)}${screens>1?` · ${screens} telas`:''}`,c.value);$('clientDialog').close();render();showMessage(c,'activation')}}catch(e){alert(e.message)}finally{setBusy(false)}});
 document.querySelectorAll('.close-dialog').forEach(b=>b.addEventListener('click',()=>$('clientDialog').close()));document.querySelectorAll('.close-message').forEach(b=>b.addEventListener('click',()=>$('messageDialog').close()));document.querySelectorAll('.close-history').forEach(b=>b.addEventListener('click',()=>$('historyDialog').close()));
 $('newClientBtn').addEventListener('click',()=>openForm());$('emptyAddBtn').addEventListener('click',()=>openForm());$('startDate').addEventListener('change',updatePreview);$('plan').addEventListener('change',updatePreview);$('lifetime').addEventListener('change',updatePreview);$('screens').addEventListener('change',()=>{if(Number($('screens').value)<1)$('screens').value=1});$('searchInput').addEventListener('input',render);$('sortSelect').addEventListener('change',render);
-document.querySelectorAll('.nav-item').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));b.classList.add('active');activeFilter=b.dataset.filter;render()}));
+document.querySelectorAll('.nav-item').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  if(b.dataset.view==='apps'){setPanelView('apps');return}
+  setPanelView('clients');
+  activeFilter=b.dataset.filter;
+  render();
+}));
+$('refreshAppsBtn').addEventListener('click',loadAndroidApps);
 $('copyMessageBtn').addEventListener('click',async()=>{await navigator.clipboard.writeText($('messageText').value);showToast('Mensagem copiada.')});$('openWhatsappBtn').addEventListener('click',()=>{const c=clients.find(c=>c.id===messageClientId);if(c)window.open(`https://wa.me/${whatsappNumber(c.phone)}?text=${encodeURIComponent($('messageText').value)}`,'_blank','noopener')});
 $('exportBtn').addEventListener('click',()=>{const blob=new Blob([JSON.stringify({version:3,exportedAt:new Date().toISOString(),clients},null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`backup-js-tech-${isoToday()}.json`;a.click();URL.revokeObjectURL(a.href);showToast('Backup baixado.')});
 $('importInput').addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;try{const data=JSON.parse(await f.text());if(!Array.isArray(data.clients))throw new Error();if(confirm(`Importar ${data.clients.length} cliente(s) para o banco?`)){setBusy(true);for(const item of data.clients)await api('/rest/v1/clients',{method:'POST',headers:{Prefer:'return=minimal'},body:JSON.stringify(fromClient(item))});await loadClients();showToast('Backup importado.')}}catch{alert('Este arquivo de backup não é válido ou não pôde ser importado.')}finally{setBusy(false);e.target.value=''}});
-async function init(){if(await restoreSession())await enterApp();else showLogin()}
+async function init(){renderAndroidApps();if(await restoreSession())await enterApp();else showLogin()}
 init();
