@@ -7,6 +7,7 @@
   <meta name="description" content="Controle particular de clientes, vendas, renovações e vencimentos da JS Tech.">
   <title>JS Tech | Controle de Clientes</title>
   <link rel="stylesheet" href="styles.css">
+  <style>.lifetime-option{display:flex!important;align-items:center;gap:10px}.lifetime-option input{width:auto!important;margin:0}.app-meta{display:block;color:#7f90a8;font-size:11px;margin-top:3px}</style>
 </head>
 <body>
   <section id="loginScreen" class="login-screen">
@@ -79,7 +80,7 @@
         </div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Cliente</th><th>Aplicativo</th><th>Plano</th><th>Vencimento</th><th>Valor</th><th>Situação</th><th>Ações</th></tr></thead>
+            <thead><tr><th>Cliente</th><th>Aplicativo</th><th>Plano / Telas</th><th>Vencimento</th><th>Valor</th><th>Situação</th><th>Ações</th></tr></thead>
             <tbody id="clientRows"></tbody>
           </table>
           <div id="emptyState" class="empty" hidden>
@@ -104,6 +105,8 @@
         <datalist id="apps"><option>Laza Play</option><option>XCIPTV</option><option>IPTV Smarters</option><option>Duplex Play</option><option>IBO Player</option><option>SmartOne IPTV</option><option>XCloud TV</option></datalist>
         <label>Data da ativação<input id="startDate" type="date" required></label>
         <label>Plano contratado<select id="plan" required><option value="30d">30 dias</option><option value="3m">3 meses</option><option value="6m">6 meses</option><option value="1y">1 ano</option></select></label>
+        <label>Quantidade de telas<select id="screens" required><option value="1">1 tela</option><option value="2">2 telas</option><option value="3">3 telas</option><option value="4">4 telas</option><option value="5">5 telas</option><option value="6">6 telas</option><option value="7">7 telas</option><option value="8">8 telas</option><option value="9">9 telas</option><option value="10">10 telas</option></select></label>
+        <label class="wide lifetime-option"><input id="lifetime" type="checkbox"> Cliente com plano <strong>Vitalício</strong> — sem vencimento</label>
         <label>Valor pago (R$)<input id="value" type="number" min="0" step="0.01" required placeholder="35,00"></label>
         <label>Forma de pagamento<select id="payment"><option>Pix</option><option>Dinheiro</option><option>Cartão</option><option>Transferência</option><option>Outro</option></select></label>
         <label class="wide">Observações<textarea id="notes" rows="2" placeholder="Informação opcional"></textarea></label>
