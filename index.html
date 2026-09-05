@@ -7,7 +7,6 @@
   <meta name="description" content="Controle particular de clientes, vendas, renovações e vencimentos da JS Tech.">
   <title>JS Tech | Controle de Clientes</title>
   <link rel="stylesheet" href="styles.css">
-  <style>.reseller-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:0 22px 18px}.reseller-summary article{background:#102039;border:1px solid #22334b;border-radius:14px;padding:15px}.reseller-summary span{display:block;color:#91a0b6;font-size:12px}.reseller-summary strong{display:block;font-size:20px;margin-top:5px}.reseller-summary .profit strong{color:#43d99c}.resellers-tree{display:grid;gap:14px;padding:0 22px 22px}.reseller-card{border:1px solid #22334b;border-radius:14px;background:#0a1626;overflow:hidden}.reseller-head{display:flex;justify-content:space-between;gap:16px;align-items:center;padding:16px;background:#102039}.reseller-head h3{margin:0}.reseller-head p{margin:4px 0 0;color:#91a0b6;font-size:12px}.reseller-totals{display:flex;gap:18px;text-align:right}.reseller-totals span{display:block;color:#91a0b6;font-size:11px}.reseller-totals strong{font-size:14px}.reseller-totals .positive{color:#43d99c}.reseller-clients{display:grid}.reseller-client{display:grid;grid-template-columns:1.2fr 1.4fr .8fr .8fr .8fr auto;gap:10px;align-items:center;padding:12px 16px;border-top:1px solid #22334b;font-size:12px}.reseller-client small{display:block;color:#91a0b6;margin-top:3px}.reseller-client .profit-value{color:#43d99c;font-weight:700}.reseller-client .loss{color:#ff8793}.reseller-whatsapp{white-space:nowrap}.lifetime-option{display:flex!important;align-items:center;gap:10px}.lifetime-option input{width:auto!important;margin:0}.app-meta{display:block;color:#7f90a8;font-size:11px;margin-top:3px}.android-app-card{border:1px solid #22334b;background:#102039;border-radius:14px;padding:16px}.android-app-card strong{display:block;font-size:16px}.android-app-card span{display:block;color:#91a0b6;font-size:12px;margin-top:6px}.android-apps-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;padding:0 22px 22px}.device-section{display:grid;gap:10px}.device-section-head{display:flex;justify-content:space-between;align-items:center;color:#aebacf}.small{padding:7px 10px;font-size:12px}.device-list{display:grid;gap:10px}.device-entry{display:grid;grid-template-columns:1fr 1.2fr 1.2fr 1.2fr 90px 36px;gap:8px;padding:10px;border:1px solid #22334b;border-radius:12px;background:#0a1626}.device-entry label{display:grid;gap:5px;color:#91a0b6;font-size:11px}.device-entry input,.device-entry select{width:100%;padding:8px;font-size:12px}.remove-device{align-self:end;height:36px;border:1px solid #63313c;background:#2b1820;color:#ff8793;border-radius:8px;font-size:18px}.device-apps-meta{display:block;color:#7f90a8;font-size:11px;margin-top:3px;max-width:180px;white-space:normal}</style>
 </head>
 <body>
   <section id="loginScreen" class="login-screen">
@@ -17,13 +16,12 @@
       <h1>Entre no seu painel</h1>
       <p class="login-copy">Seus clientes, vendas e vencimentos em um só lugar.</p>
       <form id="loginForm">
-        <label>E-mail<input id="loginEmail" type="email" required autocomplete="username" placeholder="seu@email.com"></label>
-        <label>Senha<input id="loginPassword" type="password" required minlength="6" autocomplete="current-password" placeholder="Sua senha"></label>
+        <label>Usuário<input id="loginUser" type="text" required autocomplete="username" placeholder="Digite seu usuário"></label>
+        <label>Senha<input id="loginPassword" type="password" required minlength="8" autocomplete="current-password" placeholder="Digite sua senha"></label>
         <p id="loginError" class="form-error" role="alert"></p>
         <button id="loginBtn" class="primary full" type="submit">Entrar</button>
       </form>
-      <button id="showSignupBtn" class="text-button">Primeiro acesso? Criar minha senha</button>
-      <p class="login-note">Apenas o e-mail autorizado consegue visualizar ou alterar os registros.</p>
+      <p class="login-note">No primeiro acesso, o usuário será ativado automaticamente.</p>
     </div>
   </section>
 
@@ -61,6 +59,34 @@
         <button class="primary" id="newClientBtn">+ Adicionar cliente</button>
       </header>
 
+      <section class="analytics" aria-label="Resumo financeiro">
+        <div class="analytics-head">
+          <div><p class="eyebrow">Resultado automático</p><h2>Resumo das vendas</h2><p id="periodLabel">Últimos 30 dias</p></div>
+          <div class="period-picker" role="group" aria-label="Período do resumo">
+            <button class="period-btn" data-period="lastMonth">Mês passado</button>
+            <button class="period-btn active" data-period="30d">Últimos 30 dias</button>
+            <button class="period-btn" data-period="month">Mês atual</button>
+            <button class="period-btn" data-period="all">Tudo</button>
+            <button class="period-btn" data-period="custom">Personalizado</button>
+          </div>
+        </div>
+        <div id="customDates" class="custom-dates" hidden>
+          <label>De <input id="periodStart" type="date"></label>
+          <label>Até <input id="periodEnd" type="date"></label>
+          <button id="applyPeriod" class="ghost" type="button">Calcular</button>
+        </div>
+        <div class="metric-grid">
+          <article class="metric-card"><span>Clientes ativos</span><strong id="metricActive">0</strong><small id="metricActiveValue">R$ 0,00 em planos ativos</small></article>
+          <article class="metric-card"><span>Novos clientes</span><strong id="metricNew">0</strong><small id="metricNewTrend">Sem comparação anterior</small></article>
+          <article class="metric-card warning"><span>Vencem em até 7 dias</span><strong id="metricExpiring">0</strong><small id="metricRisk">R$ 0,00 em risco</small></article>
+          <article class="metric-card success"><span>Retenção da carteira</span><strong id="metricRetention">0%</strong><small id="metricChurn">0 clientes fora da ativa</small></article>
+          <article class="metric-card money"><span>Receita no período</span><strong id="metricRevenue">R$ 0,00</strong><small id="metricRevenueTrend">Vendas e renovações recebidas</small></article>
+          <article class="metric-card money"><span>Receita mensal — MRR</span><strong id="metricMrr">R$ 0,00</strong><small>Valor mensal dos planos ativos</small></article>
+          <article class="metric-card money"><span>Ticket médio</span><strong id="metricTicket">R$ 0,00</strong><small id="metricSalesCount">0 pagamentos no período</small></article>
+          <article class="metric-card money"><span>Valor da carteira ativa</span><strong id="metricPortfolio">R$ 0,00</strong><small>Soma dos planos ativos atuais</small></article>
+        </div>
+      </section>
+
       <section class="summary-grid" aria-label="Resumo">
         <article class="summary-card blue"><span>Vencem hoje</span><strong id="countToday">0</strong><small id="valueToday">R$ 0,00</small></article>
         <article class="summary-card amber"><span>Próximos 5 dias</span><strong id="countSoon">0</strong><small id="valueSoon">R$ 0,00</small></article>
@@ -82,7 +108,7 @@
         </div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Cliente</th><th>Aplicativo</th><th>Plano / Telas</th><th>Vencimento</th><th>Valor</th><th>Situação</th><th>Ações</th></tr></thead>
+            <thead><tr><th>Cliente</th><th>Aplicativo</th><th>Plano</th><th>Vencimento</th><th>Valor</th><th>Situação</th><th>Ações</th></tr></thead>
             <tbody id="clientRows"></tbody>
           </table>
           <div id="emptyState" class="empty" hidden>
@@ -96,8 +122,8 @@
 
       <section id="resellersSection" class="panel" hidden>
         <div class="panel-head">
-          <div><h2>Revendedores e lucros</h2><p>Veja cada revenda, seus clientes, vencimentos e resultado financeiro.</p></div>
-          <label class="search"><span>⌕</span><input id="resellerSearch" type="search" placeholder="Buscar revendedor ou cliente"></label>
+          <div><h2>Revendedores e clientes</h2><p>Crie o revendedor e cadastre os clientes dentro da árvore dele.</p></div>
+          <div class="tools"><label class="search"><span>⌕</span><input id="resellerSearch" type="search" placeholder="Buscar revendedor ou cliente"></label><button class="primary" id="newResellerBtn" type="button">+ Cadastrar revendedor</button></div>
         </div>
         <div class="reseller-summary">
           <article><span>Faturamento geral</span><strong id="generalRevenue">R$ 0,00</strong></article>
@@ -106,14 +132,11 @@
           <article><span>Revendas ativas</span><strong id="generalResellers">0</strong></article>
         </div>
         <div id="resellersTree" class="resellers-tree"></div>
-        <div id="resellersEmpty" class="empty" hidden><h3>Nenhuma revenda cadastrada</h3><p>Edite ou cadastre um cliente e informe o revendedor responsável.</p></div>
+        <div id="resellersEmpty" class="empty" hidden><h3>Nenhuma revenda cadastrada</h3><p>Cadastre um cliente e informe o revendedor responsável.</p></div>
       </section>
 
       <section id="androidAppsSection" class="panel" hidden>
-        <div class="panel-head">
-          <div><h2>Aplicativos Android</h2><p>Catálogo de aplicativos disponíveis para os clientes.</p></div>
-          <button class="ghost" id="refreshAppsBtn" type="button">Atualizar lista</button>
-        </div>
+        <div class="panel-head"><div><h2>Aplicativos Android</h2><p>Cadastre o aplicativo e deixe o valor vazio ou informe um preço padrão.</p></div><div class="app-register"><input id="newAndroidAppName" placeholder="Nome do aplicativo"><input id="newAndroidAppPrice" type="number" min="0" step="0.01" placeholder="Valor (opcional)"><button class="primary" id="saveAndroidAppBtn" type="button">Cadastrar</button></div></div>
         <div id="androidAppsGrid" class="android-apps-grid"></div>
       </section>
     </main>
@@ -129,11 +152,54 @@
         <div class="wide device-section">
           <div class="device-section-head"><strong>Aplicativos e dispositivos</strong><button type="button" class="ghost small" id="addDeviceBtn">+ Adicionar outro</button></div>
           <div id="devicesList" class="device-list"></div>
-          <datalist id="apps"></datalist>
         </div>
+        <datalist id="apps">
+          <option>Assist+</option>
+          <option>Blessed Player</option>
+          <option>Box Lite</option>
+          <option>Box Player</option>
+          <option>Box Prime</option>
+          <option>Brasil IPTV</option>
+          <option>Clouddy</option>
+          <option>Duna XTP</option>
+          <option>Duo TV</option>
+          <option>Duplex Max</option>
+          <option>Duplex Play</option>
+          <option>Epic Play</option>
+          <option>Fun Play</option>
+          <option>GPC Pro</option>
+          <option>IBO Player</option>
+          <option>IPTV Smarters</option>
+          <option>JJ Player</option>
+          <option>Laza Play</option>
+          <option>Lazer Play</option>
+          <option>Magic Play</option>
+          <option>Magic Player</option>
+          <option>Max21</option>
+          <option>Mult Apps</option>
+          <option>Mult Box</option>
+          <option>Play Sim</option>
+          <option>Power Play</option>
+          <option>Smart CCP</option>
+          <option>SmartOne IPTV</option>
+          <option>Smarters Play</option>
+          <option>Super Play</option>
+          <option>Sync21 Player</option>
+          <option>Touro Box Mod</option>
+          <option>Touro Box T7 V5</option>
+          <option>Touro Box V2</option>
+          <option>Uni Revenda</option>
+          <option>Up Play</option>
+          <option>Vizzion Play</option>
+          <option>WP Entretenimento</option>
+          <option>XCloud TV</option>
+          <option>XCIPTV Player</option>
+          <option>XPlus 7.0</option>
+          <option>YouCine Mod</option>
+        </datalist>
         <label>Data da ativação<input id="startDate" type="date" required></label>
         <label>Plano contratado<select id="plan" required><option value="30d">30 dias</option><option value="3m">3 meses</option><option value="6m">6 meses</option><option value="1y">1 ano</option></select></label>
-        <label>Quantidade de telas<select id="screens" required><option value="1">1 tela</option><option value="2">2 telas</option><option value="3">3 telas</option><option value="4">4 telas</option><option value="5">5 telas</option><option value="6">6 telas</option><option value="7">7 telas</option><option value="8">8 telas</option><option value="9">9 telas</option><option value="10">10 telas</option></select></label>
+        <label>Quantidade total de telas<select id="screens" required><option value="1">1 tela</option><option value="2">2 telas</option><option value="3">3 telas</option><option value="4">4 telas</option><option value="5">5 telas</option><option value="6">6 telas</option><option value="7">7 telas</option><option value="8">8 telas</option><option value="9">9 telas</option><option value="10">10 telas</option></select></label>
         <label class="wide lifetime-option"><input id="lifetime" type="checkbox"> Cliente com plano <strong>Vitalício</strong> — sem vencimento</label>
         <label>Valor da venda (R$)<input id="value" type="number" min="0" step="0.01" required placeholder="35,00"></label>
         <label>Custo para você (R$)<input id="cost" type="number" min="0" step="0.01" value="0" placeholder="15,00"></label>
@@ -145,6 +211,14 @@
       </div>
       <div class="date-preview"><span>Vencimento calculado</span><strong id="datePreview">—</strong></div>
       <div class="modal-actions"><button type="button" class="ghost close-dialog">Cancelar</button><button type="submit" class="primary">Salvar cliente</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="resellerDialog" class="modal">
+    <form id="resellerForm">
+      <div class="modal-head"><div><p class="eyebrow">Nova árvore</p><h2>Cadastrar revendedor</h2></div><button type="button" class="icon-btn close-reseller">×</button></div>
+      <div class="form-grid"><label class="wide">Nome do revendedor<input id="newResellerName" required placeholder="Ex.: João"></label><label class="wide">WhatsApp do revendedor<input id="newResellerPhone" required inputmode="tel" placeholder="(27) 99999-9999"></label><label class="wide">Observações<textarea id="newResellerNotes" rows="2"></textarea></label></div>
+      <div class="modal-actions"><button type="button" class="ghost close-reseller">Cancelar</button><button type="submit" class="primary">Salvar revendedor</button></div>
     </form>
   </dialog>
 
