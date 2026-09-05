@@ -7,7 +7,7 @@
   <meta name="description" content="Controle particular de clientes, vendas, renovações e vencimentos da JS Tech.">
   <title>JS Tech | Controle de Clientes</title>
   <link rel="stylesheet" href="styles.css">
-  <style>.lifetime-option{display:flex!important;align-items:center;gap:10px}.lifetime-option input{width:auto!important;margin:0}.app-meta{display:block;color:#7f90a8;font-size:11px;margin-top:3px}.android-app-card{border:1px solid #22334b;background:#102039;border-radius:14px;padding:16px}.android-app-card strong{display:block;font-size:16px}.android-app-card span{display:block;color:#91a0b6;font-size:12px;margin-top:6px}.android-apps-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;padding:0 22px 22px}.device-section{display:grid;gap:10px}.device-section-head{display:flex;justify-content:space-between;align-items:center;color:#aebacf}.small{padding:7px 10px;font-size:12px}.device-list{display:grid;gap:10px}.device-entry{display:grid;grid-template-columns:1fr 1.2fr 1.2fr 1.2fr 90px 36px;gap:8px;padding:10px;border:1px solid #22334b;border-radius:12px;background:#0a1626}.device-entry label{display:grid;gap:5px;color:#91a0b6;font-size:11px}.device-entry input,.device-entry select{width:100%;padding:8px;font-size:12px}.remove-device{align-self:end;height:36px;border:1px solid #63313c;background:#2b1820;color:#ff8793;border-radius:8px;font-size:18px}.device-apps-meta{display:block;color:#7f90a8;font-size:11px;margin-top:3px;max-width:180px;white-space:normal}</style>
+  <style>.reseller-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:0 22px 18px}.reseller-summary article{background:#102039;border:1px solid #22334b;border-radius:14px;padding:15px}.reseller-summary span{display:block;color:#91a0b6;font-size:12px}.reseller-summary strong{display:block;font-size:20px;margin-top:5px}.reseller-summary .profit strong{color:#43d99c}.resellers-tree{display:grid;gap:14px;padding:0 22px 22px}.reseller-card{border:1px solid #22334b;border-radius:14px;background:#0a1626;overflow:hidden}.reseller-head{display:flex;justify-content:space-between;gap:16px;align-items:center;padding:16px;background:#102039}.reseller-head h3{margin:0}.reseller-head p{margin:4px 0 0;color:#91a0b6;font-size:12px}.reseller-totals{display:flex;gap:18px;text-align:right}.reseller-totals span{display:block;color:#91a0b6;font-size:11px}.reseller-totals strong{font-size:14px}.reseller-totals .positive{color:#43d99c}.reseller-clients{display:grid}.reseller-client{display:grid;grid-template-columns:1.2fr 1.4fr .8fr .8fr .8fr auto;gap:10px;align-items:center;padding:12px 16px;border-top:1px solid #22334b;font-size:12px}.reseller-client small{display:block;color:#91a0b6;margin-top:3px}.reseller-client .profit-value{color:#43d99c;font-weight:700}.reseller-client .loss{color:#ff8793}.reseller-whatsapp{white-space:nowrap}.lifetime-option{display:flex!important;align-items:center;gap:10px}.lifetime-option input{width:auto!important;margin:0}.app-meta{display:block;color:#7f90a8;font-size:11px;margin-top:3px}.android-app-card{border:1px solid #22334b;background:#102039;border-radius:14px;padding:16px}.android-app-card strong{display:block;font-size:16px}.android-app-card span{display:block;color:#91a0b6;font-size:12px;margin-top:6px}.android-apps-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;padding:0 22px 22px}.device-section{display:grid;gap:10px}.device-section-head{display:flex;justify-content:space-between;align-items:center;color:#aebacf}.small{padding:7px 10px;font-size:12px}.device-list{display:grid;gap:10px}.device-entry{display:grid;grid-template-columns:1fr 1.2fr 1.2fr 1.2fr 90px 36px;gap:8px;padding:10px;border:1px solid #22334b;border-radius:12px;background:#0a1626}.device-entry label{display:grid;gap:5px;color:#91a0b6;font-size:11px}.device-entry input,.device-entry select{width:100%;padding:8px;font-size:12px}.remove-device{align-self:end;height:36px;border:1px solid #63313c;background:#2b1820;color:#ff8793;border-radius:8px;font-size:18px}.device-apps-meta{display:block;color:#7f90a8;font-size:11px;margin-top:3px;max-width:180px;white-space:normal}</style>
 </head>
 <body>
   <section id="loginScreen" class="login-screen">
@@ -41,6 +41,7 @@
         <button class="nav-item" data-filter="vencidos"><span>!</span> Vencidos</button>
         <button class="nav-item" data-filter="ativos"><span>✓</span> Ativos</button>
         <button class="nav-item" data-filter="cancelados"><span>×</span> Cancelados</button>
+        <button class="nav-item" data-view="resellers"><span>♧</span> Revendedores</button>
         <button class="nav-item" data-view="apps"><span>▦</span> Aplicativos Android</button>
       </nav>
       <div class="sidebar-foot">
@@ -93,6 +94,21 @@
         </div>
       </section>
 
+      <section id="resellersSection" class="panel" hidden>
+        <div class="panel-head">
+          <div><h2>Revendedores e lucros</h2><p>Veja cada revenda, seus clientes, vencimentos e resultado financeiro.</p></div>
+          <label class="search"><span>⌕</span><input id="resellerSearch" type="search" placeholder="Buscar revendedor ou cliente"></label>
+        </div>
+        <div class="reseller-summary">
+          <article><span>Faturamento geral</span><strong id="generalRevenue">R$ 0,00</strong></article>
+          <article><span>Custo geral</span><strong id="generalCost">R$ 0,00</strong></article>
+          <article class="profit"><span>Lucro geral</span><strong id="generalProfit">R$ 0,00</strong></article>
+          <article><span>Revendas ativas</span><strong id="generalResellers">0</strong></article>
+        </div>
+        <div id="resellersTree" class="resellers-tree"></div>
+        <div id="resellersEmpty" class="empty" hidden><h3>Nenhuma revenda cadastrada</h3><p>Edite ou cadastre um cliente e informe o revendedor responsável.</p></div>
+      </section>
+
       <section id="androidAppsSection" class="panel" hidden>
         <div class="panel-head">
           <div><h2>Aplicativos Android</h2><p>Catálogo de aplicativos disponíveis para os clientes.</p></div>
@@ -119,7 +135,11 @@
         <label>Plano contratado<select id="plan" required><option value="30d">30 dias</option><option value="3m">3 meses</option><option value="6m">6 meses</option><option value="1y">1 ano</option></select></label>
         <label>Quantidade de telas<select id="screens" required><option value="1">1 tela</option><option value="2">2 telas</option><option value="3">3 telas</option><option value="4">4 telas</option><option value="5">5 telas</option><option value="6">6 telas</option><option value="7">7 telas</option><option value="8">8 telas</option><option value="9">9 telas</option><option value="10">10 telas</option></select></label>
         <label class="wide lifetime-option"><input id="lifetime" type="checkbox"> Cliente com plano <strong>Vitalício</strong> — sem vencimento</label>
-        <label>Valor pago (R$)<input id="value" type="number" min="0" step="0.01" required placeholder="35,00"></label>
+        <label>Valor da venda (R$)<input id="value" type="number" min="0" step="0.01" required placeholder="35,00"></label>
+        <label>Custo para você (R$)<input id="cost" type="number" min="0" step="0.01" value="0" placeholder="15,00"></label>
+        <label>Revendedor responsável<input id="resellerName" list="resellerNames" placeholder="Ex.: João ou deixe vazio"></label>
+        <label>WhatsApp do revendedor<input id="resellerPhone" inputmode="tel" placeholder="(27) 99999-9999"></label>
+        <datalist id="resellerNames"></datalist>
         <label>Forma de pagamento<select id="payment"><option>Pix</option><option>Dinheiro</option><option>Cartão</option><option>Transferência</option><option>Outro</option></select></label>
         <label class="wide">Observações<textarea id="notes" rows="2" placeholder="Informação opcional"></textarea></label>
       </div>
