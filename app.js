@@ -2,7 +2,7 @@ const SUPABASE_URL='https://yifgptxujimzsjoeghte.supabase.co';
 const SUPABASE_KEY='sb_publishable_TGA26mIiNQ686GJrvQI3aw_PmfP8V1-';
 const SESSION_KEY='jstech_supabase_session';
 let session=null,clients=[],activeFilter='todos',messageClientId=null,androidApps=[];
-const ANDROID_APPS_DEFAULT=['Magic Player','Brasil IPTV','Box Player','Vizzion Play','Powerplay','Epicplay','Assist+','Playsim','JJ Player','Duo TV','Mult Box','Sync21 Player','UP Play','Max21','XCIPTV Player','Smarters Player','Duna XTP','Touro Box MOD','Touro Box T7 V5','XPlus 7.0','YouCine MOD','Uni Revenda','GPC Pro','Blessed Player','Fun Play','Lazer Play','Power Play','Super Play','XCloud TV'];
+const ANDROID_APPS_DEFAULT=["Magic Player","Brasil IPTV","Box Player","Vizzion Play","Powerplay","Epicplay","Assist+","Playsim","Mult Apps","JJ Player","Duo TV","Mult Box","Sync21 Player","UP Play","Max21","XCIPTV Player","Smarters Play","Duna XTP","Touro Box MOD","Touro Box T7 V5","WP Entretenimento","XPlus 7.0","YouCine MOD","Touro Box V2","Uni Revenda","GPC Pro","Blessed Player","Fun Play","Lazer Play","Power Play","Super Play","XCloud TV"];
 const $=id=>document.getElementById(id);
 const money=value=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(Number(value)||0);
 const dateBR=date=>date?new Intl.DateTimeFormat('pt-BR').format(parseDate(date)):'—';
