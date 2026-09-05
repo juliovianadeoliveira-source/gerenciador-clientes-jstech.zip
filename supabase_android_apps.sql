@@ -42,14 +42,7 @@ create unique index if not exists client_apps_client_name_unique
 alter table public.client_apps enable row level security;
 
 insert into public.android_apps (name)
-select name from (values
-('Magic Player'),('Brasil IPTV'),('Box Player'),('Vizzion Play'),('Powerplay'),('Epicplay'),
-('Assist+'),('Playsim'),('JJ Player'),('Duo TV'),('Mult Box'),('Sync21 Player'),
-('UP Play'),('Max21'),('XCIPTV Player'),('Smarters Player'),('Duna XTP'),
-('Touro Box MOD'),('Touro Box T7 V5'),('XPlus 7.0'),('YouCine MOD'),('Uni Revenda'),
-('GPC Pro'),('Blessed Player'),('Fun Play'),('Lazer Play'),('Power Play'),
-('Super Play'),('XCloud TV')
-) as apps(name)
+select name from (values ('Magic Player'),('Brasil IPTV'),('Box Player'),('Vizzion Play'),('Powerplay'),('Epicplay'),('Assist+'),('Playsim'),('Mult Apps'),('JJ Player'),('Duo TV'),('Mult Box'),('Sync21 Player'),('UP Play'),('Max21'),('XCIPTV Player'),('Smarters Play'),('Duna XTP'),('Touro Box MOD'),('Touro Box T7 V5'),('WP Entretenimento'),('XPlus 7.0'),('YouCine MOD'),('Touro Box V2'),('Uni Revenda'),('GPC Pro'),('Blessed Player'),('Fun Play'),('Lazer Play'),('Power Play'),('Super Play'),('XCloud TV')) as apps(name)
 where not exists (
   select 1 from public.android_apps a
   where a.owner_id=auth.uid() and lower(trim(a.name))=lower(trim(apps.name))
