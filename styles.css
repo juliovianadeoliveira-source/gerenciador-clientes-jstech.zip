@@ -23,3 +23,18 @@
 
 /* Contraste final do painel financeiro */
 main{background:transparent!important;color:#f6f8fc!important}main section,main article{color:#f6f8fc!important}main .panel,main .analytics,main .monthly-report,main .finance-panel,main .financial-panel{background:#0d1a2c!important;color:#f6f8fc!important;border-color:#22334b!important}main .summary-card,main .metric-card,main .finance-card,main .financial-card{background:#102039!important;color:#f6f8fc!important;border-color:#22334b!important}main h1,main h2,main h3,main h4,main strong,main td,main th{color:#f6f8fc!important}main p,main small,main label,main .muted,main .subtle{color:#aebacf!important}main th{background:#0a1626!important;color:#aebacf!important}main td{border-color:#1c2b40!important}main input,main select,main textarea{background:#0a1626!important;color:#fff!important;border-color:#2b405d!important}
+
+/* FUNDO 100% ESCURO — sem áreas brancas */
+html{background:#07101d!important;color:#f6f8fc!important}
+html,body{min-height:100%;background:#07101d!important}
+body{background:#07101d!important;background-image:none!important}
+#appShell,main{background:#07101d!important}
+main{min-height:100vh}
+main section,.panel,.analytics,.monthly-report,.table-wrap,.monthly-report-grid{background-color:#0d1a2c!important}
+main .panel,.analytics,.monthly-report{box-shadow:0 22px 55px rgba(0,0,0,.28)!important}
+.table-wrap{border-top-color:#22334b!important}
+table{background:#0d1a2c!important}
+tbody tr,td{background:#0d1a2c!important;color:#f6f8fc!important}
+th{background:#0a1626!important}
+/* mantém somente cartões e controles ligeiramente mais claros que o fundo */
+main .summary-card,main .metric-card,.month-card,.monthly-example{background:#102039!important}
