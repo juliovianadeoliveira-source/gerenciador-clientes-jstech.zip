@@ -192,3 +192,14 @@ init();
 /* JSTECH ENHANCEMENTS END */
 
 // JSTECH AUTO-INTEGRATION END
+
+/* JSTECH_OLD_HOME_LOGIC */
+
+/* JSTECH_OLD_HOME_LOGIC */
+(function(){
+  function hs(c){if(c.cancelled)return{label:'Cancelado',cls:'gray',overdue:false};if(c.lifetime)return{label:'Ativo',cls:'green',overdue:false};const d=diffDays(c.dueDate);return d<0?{label:'Atrasado',cls:'red',overdue:true}:{label:'Pendente',cls:'amber',overdue:false}}
+  function renderOldHome(){const rows=document.getElementById('oldClientRows');if(!rows||typeof clients==='undefined')return;const list=clients.filter(c=>!c.cancelled).sort((a,b)=>(a.dueDate||'9999').localeCompare(b.dueDate||'9999'));const paid=list.filter(c=>c.payment==='paid'||c.payment_status==='paid'||c.status==='paid'),over=list.filter(c=>!c.lifetime&&diffDays(c.dueDate)<0),pending=list.filter(c=>!paid.includes(c)&&!c.lifetime&&diffDays(c.dueDate)>=0),received=paid.reduce((t,c)=>t+Number(c.value||0),0),costs=list.reduce((t,c)=>t+Number(c.cost||0),0);document.getElementById('oldPaid').textContent=paid.length;document.getElementById('oldPending').textContent=pending.length;document.getElementById('oldOverdue').textContent=over.length;document.getElementById('oldReceived').textContent=money(received);document.getElementById('oldCosts').textContent=money(costs);document.getElementById('oldProfit').textContent=money(received-costs);rows.innerHTML=list.map(c=>{const s=hs(c),a=s.overdue?`<div class="old-actions"><button onclick="renewClient('${c.id}')">Pago</button><button onclick="sendCharge('${c.id}')">Cobrar</button><button onclick="showHistory('${c.id}')">Histórico</button></div>`:'';return `<tr><td><strong>${escapeHTML(c.name)}</strong></td><td>${c.lifetime?'Vitalício':dateBR(c.dueDate)}</td><td><span class="badge ${s.cls}">${s.label}</span></td><td>${a}</td></tr>`}).join('');const e=document.getElementById('oldEmptyState');if(e)e.hidden=list.length!==0}
+  window.renderOldHome=renderOldHome;
+  function bind(){const m=(id,f)=>{const e=document.getElementById(id);if(e&&!e.dataset.bound){e.dataset.bound='1';e.addEventListener('click',f)}};m('oldNewClientBtn',()=>document.getElementById('newClientBtn')?.click());m('oldBackupBtn',()=>document.getElementById('exportBtn')?.click());m('oldAppsBtn',()=>document.querySelector('.sidebar .nav-item[data-view="apps"]')?.click());m('oldSearchBtn',()=>document.getElementById('searchInput')?.focus());m('oldReportBtn',()=>{const e=document.querySelector('.monthly-report');if(e){e.hidden=false;e.scrollIntoView({behavior:'smooth'})}});m('oldPixBtn',()=>typeof showToast==='function'&&showToast('Configuração do Pix disponível no cadastro de recebimento.'))}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{renderOldHome();bind()});else{renderOldHome();bind()}
+})();
