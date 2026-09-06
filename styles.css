@@ -19,3 +19,4 @@
 @media(max-width:900px){.monthly-report-grid{grid-template-columns:repeat(3,1fr)}}@media(max-width:560px){.monthly-report-grid{grid-template-columns:1fr}.monthly-example{line-height:1.5}}
 .device-entry{grid-template-columns:repeat(2,minmax(0,1fr))!important}.device-entry label{min-width:0}.device-entry input,.device-entry select{min-width:0}.device-entry .remove-device{grid-column:1/-1}
 .field-hint{display:block;margin-top:6px;color:#8fa6bf;font-size:12px;line-height:1.35}
+.m3u-status{display:block;margin-top:5px;color:#43d99c;font-size:11px;line-height:1.35}
