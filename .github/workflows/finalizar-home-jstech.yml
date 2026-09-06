@@ -1,0 +1,139 @@
+name: Finalizar home JS Tech
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Corrigir arquivos reais do aplicativo
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+
+          index = Path('index.html')
+          text = index.read_text(encoding='utf-8')
+          marker = '<!-- JSTECH_OLD_HOME -->'
+          if marker not in text:
+              home = '''      <!-- JSTECH_OLD_HOME -->
+          <section id="oldHomeSection" class="old-home">
+            <div class="old-home-title"><div><p class="eyebrow">Painel principal</p><h2>💰 Financeiro e alertas</h2></div></div>
+            <div class="old-finance-grid">
+              <article><span>Pagos</span><strong id="oldPaid">0</strong></article>
+              <article><span>Pendentes</span><strong id="oldPending">0</strong></article>
+              <article><span>Atrasados</span><strong id="oldOverdue">0</strong></article>
+              <article><span>Recebido</span><strong id="oldReceived">R$ 0,00</strong></article>
+              <article><span>Custos</span><strong id="oldCosts">R$ 0,00</strong></article>
+              <article><span>Lucro estimado</span><strong id="oldProfit">R$ 0,00</strong></article>
+            </div>
+            <div class="old-home-actions">
+              <button class="primary" id="oldSearchBtn" type="button">🔎 Busca completa</button>
+              <button class="ghost" id="oldPixBtn" type="button">💠 Configurar Pix</button>
+              <button class="ghost" id="oldReportBtn" type="button">📊 Relatório mensal</button>
+              <button class="ghost" id="oldBackupBtn" type="button">💾 Backup agora</button>
+              <button class="primary" id="oldAppsBtn" type="button">🚀 Ativar aplicativo</button>
+            </div>
+            <section class="panel old-client-panel">
+              <div class="panel-head"><div><h2>Clientes</h2><p>Clientes cadastrados e situação de vencimento.</p></div><button class="primary" id="oldNewClientBtn" type="button">+ Adicionar cliente</button></div>
+              <div class="table-wrap"><table class="old-client-table"><thead><tr><th>Cliente</th><th>Vencimento</th><th>Status</th><th>Ações</th></tr></thead><tbody id="oldClientRows"></tbody></table><div id="oldEmptyState" class="empty" hidden><h3>Nenhum cliente cadastrado</h3><p>Adicione seu primeiro cliente.</p></div></div>
+            </section>
+          </section>
+      '''
+              marker2 = '<section class="analytics"'
+              if marker2 not in text:
+                  raise SystemExit('analytics não encontrada')
+              text = text.replace(marker2, home + '      ' + marker2, 1)
+              index.write_text(text, encoding='utf-8')
+
+          app = Path('app.js')
+          js = app.read_text(encoding='utf-8')
+          jsmarker = '/* JSTECH_OLD_HOME_REAL_FINAL */'
+          if jsmarker not in js:
+              patch = r'''
+/* JSTECH_OLD_HOME_REAL_FINAL */
+function renderOldHome(){
+  const rows=document.getElementById('oldClientRows');
+  if(!rows)return;
+  const list=(clients||[]).filter(c=>!c.cancelled).sort((a,b)=>(a.dueDate||'9999').localeCompare(b.dueDate||'9999'));
+  const overdue=list.filter(c=>!c.lifetime&&diffDays(c.dueDate)<0);
+  const paid=list.filter(c=>c.payment==='paid'||c.payment_status==='paid'||c.status==='paid');
+  const pending=list.filter(c=>!paid.includes(c)&&!c.lifetime&&diffDays(c.dueDate)>=0);
+  const received=paid.reduce((t,c)=>t+Number(c.value||0),0);
+  const costs=list.reduce((t,c)=>t+Number(c.cost||0),0);
+  const el=id=>document.getElementById(id);
+  if(el('oldPaid'))el('oldPaid').textContent=paid.length;
+  if(el('oldPending'))el('oldPending').textContent=pending.length;
+  if(el('oldOverdue'))el('oldOverdue').textContent=overdue.length;
+  if(el('oldReceived'))el('oldReceived').textContent=money(received);
+  if(el('oldCosts'))el('oldCosts').textContent=money(costs);
+  if(el('oldProfit'))el('oldProfit').textContent=money(received-costs);
+  rows.innerHTML=list.map(c=>{
+    const days=c.lifetime?null:diffDays(c.dueDate);
+    const status=c.lifetime?'Ativo':(days<0?'Atrasado':'Pendente');
+    const cls=c.lifetime||days>=0?'green':'red';
+    const actions=days!==null&&days<0?`<div class="old-actions"><button class="old-paid" onclick="renewClient('${c.id}')">Pago</button><button class="old-charge" onclick="sendCharge('${c.id}')">Cobrar</button><button class="old-history" onclick="showHistory('${c.id}')">Histórico</button></div>`:'';
+    return `<tr><td><strong>${escapeHTML(c.name)}</strong></td><td>${c.lifetime?'Vitalício':dateBR(c.dueDate)}</td><td><span class="badge ${cls}">${status}</span></td><td>${actions}</td></tr>`;
+  }).join('');
+}
+
+/* Garante que a renderização principal também atualize a home antiga. */
+const __jstech_original_render = render;
+render = function(){ __jstech_original_render.apply(this, arguments); renderOldHome(); };
+
+(function(){
+  function screen(filter){
+    const main=document.querySelector('main'); if(!main)return;
+    const home=document.getElementById('oldHomeSection');
+    const analytics=main.querySelector('.analytics');
+    const monthly=main.querySelector('.monthly-report');
+    const summary=main.querySelector('.summary-grid');
+    const panels=[...main.querySelectorAll(':scope > section.panel')];
+    const clientPanel=panels.find(p=>p.id!=='resellersSection'&&p.id!=='androidAppsSection'&&!p.classList.contains('old-client-panel'));
+    const res=document.getElementById('resellersSection'),apps=document.getElementById('androidAppsSection');
+    if(home)home.hidden=filter!=='todos';
+    if(analytics)analytics.hidden=true;if(monthly)monthly.hidden=true;if(summary)summary.hidden=true;
+    if(res)res.hidden=true;if(apps)apps.hidden=true;if(clientPanel)clientPanel.hidden=filter==='todos';
+    activeFilter=filter;
+    if(filter==='todos')renderOldHome();else __jstech_original_render();
+  }
+  function bind(){
+    document.querySelectorAll('.sidebar .nav-item[data-filter]').forEach(btn=>{
+      if(btn.dataset.jstechFinal)return;btn.dataset.jstechFinal='1';
+      btn.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();document.querySelectorAll('.sidebar .nav-item').forEach(x=>x.classList.remove('active'));btn.classList.add('active');screen(btn.dataset.filter||'todos')},true);
+    });
+    document.querySelectorAll('.sidebar .nav-item[data-view]').forEach(btn=>{
+      if(btn.dataset.jstechFinalView)return;btn.dataset.jstechFinalView='1';
+      btn.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();document.querySelectorAll('.sidebar .nav-item').forEach(x=>x.classList.remove('active'));btn.classList.add('active');const main=document.querySelector('main');const home=document.getElementById('oldHomeSection');if(home)home.hidden=true;if(main?.querySelector('.analytics'))main.querySelector('.analytics').hidden=true;if(main?.querySelector('.monthly-report'))main.querySelector('.monthly-report').hidden=true;if(main?.querySelector('.summary-grid'))main.querySelector('.summary-grid').hidden=true;if(btn.dataset.view==='resellers'){const x=document.getElementById('resellersSection');if(x)x.hidden=false;if(typeof renderResellers==='function')renderResellers()}if(btn.dataset.view==='apps'){const x=document.getElementById('androidAppsSection');if(x)x.hidden=false;if(typeof renderAndroidApps==='function')renderAndroidApps()}},true);
+    });
+    const old=screen('todos');
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind);else bind();
+})();
+'''
+              js += '\n' + patch
+              app.write_text(js, encoding='utf-8')
+
+          css = Path('styles.css')
+          cs = css.read_text(encoding='utf-8')
+          if '/* JSTECH_OLD_HOME_REAL_FINAL_STYLE */' not in cs:
+              cs += '''\n/* JSTECH_OLD_HOME_REAL_FINAL_STYLE */\n.old-home{margin-bottom:24px}.old-home-title{margin-bottom:14px}.old-home-title h2{margin:0;font-size:22px}.old-finance-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;margin-bottom:14px}.old-finance-grid article{background:#0d1a2c;border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:14px}.old-finance-grid span{display:block;color:#9aa9bd;font-size:12px;margin-bottom:7px}.old-finance-grid strong{font-size:22px;color:#f6f8fc}.old-home-actions{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}.old-client-panel{margin-top:0}.old-client-table th,.old-client-table td{padding:10px 12px}.old-actions{display:flex;gap:6px;flex-wrap:wrap}.old-actions button{border:0;border-radius:7px;padding:7px 10px;font-weight:700;cursor:pointer}.old-paid{background:#16a34a;color:#fff}.old-charge{background:#2563eb;color:#fff}.old-history{background:#e5e7eb;color:#111827}.badge.red{background:#7f1d1d;color:#fecaca}.badge.green{background:#14532d;color:#bbf7d0}@media(max-width:1100px){.old-finance-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(max-width:650px){.old-finance-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}\n'''
+              css.write_text(cs, encoding='utf-8')
+          PY
+
+      - name: Verificar JavaScript e publicar
+        run: |
+          node --check app.js
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html app.js styles.css
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "Aplica home financeira e menus separados [skip ci]"
+          git push
