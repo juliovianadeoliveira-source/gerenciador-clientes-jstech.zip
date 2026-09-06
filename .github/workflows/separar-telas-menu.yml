@@ -73,6 +73,7 @@ jobs:
         showMenuScreen(activeFilter);
       },true);
     });
+    showMenuScreen(activeFilter||'todos');
   }
 
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bindSeparatedMenu);
