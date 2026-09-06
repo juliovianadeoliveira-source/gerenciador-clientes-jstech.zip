@@ -7,7 +7,6 @@
   <meta name="description" content="Controle particular de clientes, vendas, renovações e vencimentos da JS Tech.">
   <title>JS Tech | Controle de Clientes</title>
   <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="ui-fix.css?v=20260906-1">
 </head>
 <body>
   <section id="loginScreen" class="login-screen">
@@ -60,30 +59,6 @@
         <button class="primary" id="newClientBtn">+ Adicionar cliente</button>
       </header>
 
-      
-<!-- JSTECH_OLD_HOME -->
-<section id="oldHomeSection" class="old-home">
-  <div class="old-home-title"><div><p class="eyebrow">Painel principal</p><h2>💰 Financeiro e alertas</h2></div></div>
-  <div class="old-finance-grid">
-    <article><span>Pagos</span><strong id="oldPaid">0</strong></article>
-    <article><span>Pendentes</span><strong id="oldPending">0</strong></article>
-    <article><span>Atrasados</span><strong id="oldOverdue">0</strong></article>
-    <article><span>Recebido</span><strong id="oldReceived">R$ 0,00</strong></article>
-    <article><span>Custos</span><strong id="oldCosts">R$ 0,00</strong></article>
-    <article><span>Lucro estimado</span><strong id="oldProfit">R$ 0,00</strong></article>
-  </div>
-  <div class="old-home-actions">
-    <button class="primary" id="oldSearchBtn" type="button">🔎 Busca completa</button>
-    <button class="ghost" id="oldPixBtn" type="button">💠 Configurar Pix</button>
-    <button class="ghost" id="oldReportBtn" type="button">📊 Relatório mensal</button>
-    <button class="ghost" id="oldBackupBtn" type="button">💾 Backup agora</button>
-    <button class="primary" id="oldAppsBtn" type="button">🚀 Ativar aplicativo</button>
-  </div>
-  <section class="panel old-client-panel">
-    <div class="panel-head"><div><h2>Clientes</h2></div><button class="primary" id="oldNewClientBtn" type="button">+ Adicionar cliente</button></div>
-    <div class="table-wrap"><table class="old-client-table"><thead><tr><th>Cliente</th><th>Vencimento</th><th>Status</th><th>Ações</th></tr></thead><tbody id="oldClientRows"></tbody></table><div id="oldEmptyState" class="empty" hidden><h3>Nenhum cliente cadastrado</h3></div></div>
-  </section>
-</section>
       <section class="analytics" aria-label="Resumo financeiro">
         <div class="analytics-head">
           <div><p class="eyebrow">Resultado automático</p><h2>Resumo das vendas</h2><p id="periodLabel">Últimos 30 dias</p></div>
