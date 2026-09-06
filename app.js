@@ -203,3 +203,17 @@ init();
   function bind(){const m=(id,f)=>{const e=document.getElementById(id);if(e&&!e.dataset.bound){e.dataset.bound='1';e.addEventListener('click',f)}};m('oldNewClientBtn',()=>document.getElementById('newClientBtn')?.click());m('oldBackupBtn',()=>document.getElementById('exportBtn')?.click());m('oldAppsBtn',()=>document.querySelector('.sidebar .nav-item[data-view="apps"]')?.click());m('oldSearchBtn',()=>document.getElementById('searchInput')?.focus());m('oldReportBtn',()=>{const e=document.querySelector('.monthly-report');if(e){e.hidden=false;e.scrollIntoView({behavior:'smooth'})}});m('oldPixBtn',()=>typeof showToast==='function'&&showToast('Configuração do Pix disponível no cadastro de recebimento.'))}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{renderOldHome();bind()});else{renderOldHome();bind()}
 })();
+
+/* Financeiro separado da página inicial */
+(function(){
+ function syncFinanceVisibility(){
+  const financeActive=!!document.querySelector('.nav-item.active[data-view="finance"]');
+  document.querySelectorAll('main > *').forEach(el=>{
+   if(el.id==='resellersSection'||el.id==='androidAppsSection'||el.classList.contains('analytics')||el.classList.contains('monthly-report')||el.classList.contains('summary-grid')||el.classList.contains('topbar')||el.querySelector('#clientRows')) return;
+   if((el.textContent||'').includes('Financeiro e alertas')) el.hidden=!financeActive;
+  });
+ }
+ document.addEventListener('click',e=>{if(e.target.closest('.nav-item'))setTimeout(syncFinanceVisibility,50)});
+ setInterval(syncFinanceVisibility,1000);
+ setTimeout(syncFinanceVisibility,300);
+})();
