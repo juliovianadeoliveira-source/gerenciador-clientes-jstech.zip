@@ -153,7 +153,7 @@
       <input type="hidden" id="clientId">
       <div class="form-grid">
         <label class="wide">Nome do cliente<input id="name" required autocomplete="name" placeholder="Ex.: Maria Aparecida"></label>
-        <label>Telefone/WhatsApp<input id="phone" required inputmode="tel" placeholder="(27) 99999-9999"></label>
+        <label id="clientPhoneLabel">Telefone/WhatsApp<input id="phone" required inputmode="tel" placeholder="(27) 99999-9999"><small id="clientPhoneHint" class="field-hint"></small></label>
         <div class="wide device-section">
           <div class="device-section-head"><strong>Aplicativos e dispositivos</strong><button type="button" class="ghost small" id="addDeviceBtn">+ Adicionar outro</button></div>
           <div id="devicesList" class="device-list"></div>
