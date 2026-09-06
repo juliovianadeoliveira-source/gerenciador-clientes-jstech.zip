@@ -1,4 +1,4 @@
-name: Separar telas do menu lateral
+name: Restaurar tela inicial e separar menus
 
 on:
   push:
@@ -8,47 +8,156 @@ permissions:
   contents: write
 
 jobs:
-  separate:
+  fix:
     if: "!contains(github.event.head_commit.message, '[skip ci]')"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Aplicar separação das telas
+      - name: Restaurar tela inicial antiga
         shell: python
         run: |
           from pathlib import Path
 
+          index = Path('index.html')
+          text = index.read_text(encoding='utf-8')
+
+          home_marker = '<!-- JSTECH_OLD_HOME -->'
+          if home_marker not in text:
+              home = '''
+      <!-- JSTECH_OLD_HOME -->
+      <section id="oldHomeSection" class="old-home">
+        <div class="old-home-title"><div><p class="eyebrow">Painel principal</p><h2>💰 Financeiro e alertas</h2></div></div>
+        <div class="old-finance-grid">
+          <article><span>Pagos</span><strong id="oldPaid">0</strong></article>
+          <article><span>Pendentes</span><strong id="oldPending">0</strong></article>
+          <article><span>Atrasados</span><strong id="oldOverdue">0</strong></article>
+          <article><span>Recebido</span><strong id="oldReceived">R$ 0,00</strong></article>
+          <article><span>Custos</span><strong id="oldCosts">R$ 0,00</strong></article>
+          <article><span>Lucro estimado</span><strong id="oldProfit">R$ 0,00</strong></article>
+        </div>
+        <div class="old-home-actions">
+          <button class="primary" id="oldSearchBtn" type="button">🔎 Busca completa</button>
+          <button class="ghost" id="oldPixBtn" type="button">💠 Configurar Pix</button>
+          <button class="ghost" id="oldReportBtn" type="button">📊 Relatório mensal</button>
+          <button class="ghost" id="oldBackupBtn" type="button">💾 Backup agora</button>
+          <button class="primary" id="oldAppsBtn" type="button">🚀 Ativar aplicativo</button>
+        </div>
+        <section class="panel old-client-panel">
+          <div class="panel-head">
+            <div><h2>Clientes</h2><p>Clientes cadastrados e situação de vencimento.</p></div>
+            <button class="primary" id="oldNewClientBtn" type="button">+ Adicionar cliente</button>
+          </div>
+          <div class="table-wrap">
+            <table class="old-client-table">
+              <thead><tr><th>Cliente</th><th>Vencimento</th><th>Status</th><th>Ações</th></tr></thead>
+              <tbody id="oldClientRows"></tbody>
+            </table>
+            <div id="oldEmptyState" class="empty" hidden><h3>Nenhum cliente cadastrado</h3><p>Adicione seu primeiro cliente.</p></div>
+          </div>
+        </section>
+      </section>
+'''
+              marker = '<section class="analytics"'
+              if marker not in text:
+                  raise SystemExit('Não encontrei a seção analytics no index.html')
+              text = text.replace(marker, home + '      ' + marker, 1)
+              index.write_text(text, encoding='utf-8')
+
+      - name: Adicionar lógica da tela inicial antiga
+        shell: python
+        run: |
+          from pathlib import Path
           path = Path('app.js')
           text = path.read_text(encoding='utf-8')
+          marker = '\n/* JSTECH_OLD_HOME_LOGIC */\n'
+          if marker not in text:
+              patch = r'''
+/* JSTECH_OLD_HOME_LOGIC */
+(function(){
+  function homeStatus(c){
+    if(c.cancelled)return {label:'Cancelado',cls:'gray',overdue:false};
+    if(c.lifetime)return {label:'Ativo',cls:'green',overdue:false};
+    const days=diffDays(c.dueDate);
+    if(days<0)return {label:'Atrasado',cls:'red',overdue:true};
+    return {label:'Pendente',cls:'amber',overdue:false};
+  }
+  function homeActions(c){
+    const s=homeStatus(c);
+    if(!s.overdue)return '';
+    return `<div class="old-actions"><button class="old-paid" onclick="renewClient('${c.id}')">Pago</button><button class="old-charge" onclick="sendCharge('${c.id}')">Cobrar</button><button class="old-history" onclick="showHistory('${c.id}')">Histórico</button></div>`;
+  }
+  function renderOldHome(){
+    const rows=document.getElementById('oldClientRows');
+    if(!rows)return;
+    const list=(clients||[]).filter(c=>!c.cancelled).sort((a,b)=>(a.dueDate||'9999').localeCompare(b.dueDate||'9999'));
+    const paid=list.filter(c=>c.payment==='paid'||c.payment_status==='paid'||c.status==='paid');
+    const overdue=list.filter(c=>!c.lifetime&&diffDays(c.dueDate)<0);
+    const pending=list.filter(c=>!paid.includes(c)&&!c.lifetime&&diffDays(c.dueDate)>=0);
+    const received=paid.reduce((t,c)=>t+Number(c.value||0),0);
+    const costs=list.reduce((t,c)=>t+Number(c.cost||0),0);
+    document.getElementById('oldPaid').textContent=paid.length;
+    document.getElementById('oldPending').textContent=pending.length;
+    document.getElementById('oldOverdue').textContent=overdue.length;
+    document.getElementById('oldReceived').textContent=money(received);
+    document.getElementById('oldCosts').textContent=money(costs);
+    document.getElementById('oldProfit').textContent=money(received-costs);
+    rows.innerHTML=list.map(c=>{const s=homeStatus(c);return `<tr><td><strong>${escapeHTML(c.name)}</strong></td><td>${c.lifetime?'Vitalício':dateBR(c.dueDate)}</td><td><span class="badge ${s.cls}">${s.label}</span></td><td>${homeActions(c)}</td></tr>`}).join('');
+    const empty=document.getElementById('oldEmptyState');if(empty)empty.hidden=list.length!==0;
+  }
+  window.renderOldHome=renderOldHome;
+  function bindOldHomeButtons(){
+    const map=(id,fn)=>{const el=document.getElementById(id);if(el&&!el.dataset.bound){el.dataset.bound='1';el.addEventListener('click',fn)}};
+    map('oldNewClientBtn',()=>document.getElementById('newClientBtn')?.click());
+    map('oldBackupBtn',()=>document.getElementById('exportBtn')?.click());
+    map('oldAppsBtn',()=>document.querySelector('.sidebar .nav-item[data-view="apps"]')?.click());
+    map('oldSearchBtn',()=>document.getElementById('searchInput')?.focus());
+    map('oldReportBtn',()=>{const el=document.querySelector('.monthly-report');if(el){el.hidden=false;el.scrollIntoView({behavior:'smooth'})}});
+    map('oldPixBtn',()=>{if(typeof showToast==='function')showToast('Configuração do Pix disponível no cadastro de recebimento.')});
+  }
+  function refresh(){if(typeof clients!=='undefined')renderOldHome();bindOldHomeButtons()}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',refresh);else refresh();
+  const oldRender=window.render;
+  if(typeof oldRender==='function')window.render=function(){oldRender();renderOldHome();bindOldHomeButtons()};
+})();
+'''
+              path.write_text(text+marker+patch,encoding='utf-8')
 
+      - name: Separar as telas do menu
+        shell: python
+        run: |
+          from pathlib import Path
+          path = Path('app.js')
+          text = path.read_text(encoding='utf-8')
           marker = '\n/* JSTECH_SEPARATED_MENU */\n'
           if marker not in text:
               patch = r'''
 /* JSTECH_SEPARATED_MENU */
 (function(){
   function showMenuScreen(filter){
-    const main=document.querySelector('main');
-    if(!main)return;
+    const main=document.querySelector('main');if(!main)return;
+    const home=document.getElementById('oldHomeSection');
     const analytics=main.querySelector('.analytics');
     const monthly=main.querySelector('.monthly-report');
     const summary=main.querySelector('.summary-grid');
     const panels=[...main.querySelectorAll(':scope > section.panel')];
-    const clientPanel=panels.find(p=>p.id!=='resellersSection'&&p.id!=='androidAppsSection');
+    const clientPanel=panels.find(p=>p.id!=='resellersSection'&&p.id!=='androidAppsSection'&&!p.classList.contains('old-client-panel'));
     const resellers=document.getElementById('resellersSection');
     const apps=document.getElementById('androidAppsSection');
     if(filter==='todos'){
-      if(analytics)analytics.hidden=false;
-      if(monthly)monthly.hidden=false;
-      if(summary)summary.hidden=false;
+      if(home)home.hidden=false;
+      if(analytics)analytics.hidden=true;
+      if(monthly)monthly.hidden=true;
+      if(summary)summary.hidden=true;
       if(clientPanel)clientPanel.hidden=true;
       if(resellers)resellers.hidden=true;
       if(apps)apps.hidden=true;
-      const title=main.querySelector('.topbar h1');
-      if(title)title.textContent='Controle de vencimentos';
+      const title=main.querySelector('.topbar h1');if(title)title.textContent='Controle de clientes';
+      if(typeof renderOldHome==='function')renderOldHome();
       return;
     }
+    if(home)home.hidden=true;
     if(analytics)analytics.hidden=true;
     if(monthly)monthly.hidden=true;
     if(summary)summary.hidden=true;
@@ -56,37 +165,39 @@ jobs:
     if(apps)apps.hidden=true;
     if(clientPanel)clientPanel.hidden=false;
     const titles={hoje:'Vencem hoje',amanha:'Vencem amanhã',proximos:'Próximos 5 dias',vencidos:'Clientes vencidos',ativos:'Clientes ativos',cancelados:'Clientes cancelados'};
-    const title=main.querySelector('.topbar h1');
-    if(title)title.textContent=titles[filter]||'Clientes';
-    window.activeFilter=filter;
-    if(typeof render==='function')render();
+    const title=main.querySelector('.topbar h1');if(title)title.textContent=titles[filter]||'Clientes';
+    activeFilter=filter;if(typeof render==='function')render();
   }
-
-  function bindSeparatedMenu(){
+  function bind(){
     document.querySelectorAll('.sidebar .nav-item[data-filter]').forEach(btn=>{
-      btn.addEventListener('click',function(ev){
-        ev.preventDefault();
-        ev.stopImmediatePropagation();
-        document.querySelectorAll('.sidebar .nav-item').forEach(x=>x.classList.remove('active'));
-        btn.classList.add('active');
-        activeFilter=btn.dataset.filter||'todos';
-        showMenuScreen(activeFilter);
-      },true);
+      btn.addEventListener('click',function(ev){ev.preventDefault();ev.stopImmediatePropagation();document.querySelectorAll('.sidebar .nav-item').forEach(x=>x.classList.remove('active'));btn.classList.add('active');activeFilter=btn.dataset.filter||'todos';showMenuScreen(activeFilter)},true);
     });
     showMenuScreen(activeFilter||'todos');
   }
-
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bindSeparatedMenu);
-  else bindSeparatedMenu();
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind);else bind();
 })();
 '''
               path.write_text(text+marker+patch,encoding='utf-8')
 
-      - name: Commitar alteração
+      - name: Estilo da tela inicial
+        shell: python
+        run: |
+          from pathlib import Path
+          path=Path('styles.css')
+          text=path.read_text(encoding='utf-8')
+          marker='\n/* JSTECH_OLD_HOME_STYLE */\n'
+          if marker not in text:
+              css=r'''
+/* JSTECH_OLD_HOME_STYLE */
+.old-home{margin-bottom:24px}.old-home-title{margin-bottom:14px}.old-home-title h2{margin:0;font-size:22px}.old-finance-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;margin-bottom:14px}.old-finance-grid article{background:#0d1a2c;border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:14px}.old-finance-grid span{display:block;color:#9aa9bd;font-size:12px;margin-bottom:7px}.old-finance-grid strong{font-size:22px;color:#f6f8fc}.old-home-actions{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}.old-client-panel{margin-top:0}.old-client-table th,.old-client-table td{padding:10px 12px}.old-actions{display:flex;gap:6px;flex-wrap:wrap}.old-actions button{border:0;border-radius:7px;padding:7px 10px;font-weight:700;cursor:pointer}.old-paid{background:#16a34a;color:#fff}.old-charge{background:#2563eb;color:#fff}.old-history{background:#e5e7eb;color:#111827}.badge.red{background:#7f1d1d;color:#fecaca}.badge.amber{background:#78350f;color:#fde68a}.badge.green{background:#14532d;color:#bbf7d0}.badge.gray{background:#374151;color:#d1d5db}@media(max-width:1100px){.old-finance-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(max-width:650px){.old-finance-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+'''
+              path.write_text(text+marker+css,encoding='utf-8')
+
+      - name: Commitar alterações
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add app.js .github/workflows/separar-telas-menu.yml
+          git add index.html app.js styles.css .github/workflows/separar-telas-menu.yml
           if git diff --cached --quiet; then exit 0; fi
-          git commit -m "Separa telas do menu lateral [skip ci]"
+          git commit -m "Restaura tela inicial financeira e separa menus [skip ci]"
           git push
