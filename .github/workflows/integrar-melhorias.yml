@@ -1,0 +1,47 @@
+name: Integrar melhorias JS Tech
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'enhancements.js'
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Integrar enhancements.js no app.js
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          app = Path('app.js')
+          extra = Path('enhancements.js').read_text(encoding='utf-8').strip()
+          text = app.read_text(encoding='utf-8')
+          start = '/* JSTECH ENHANCEMENTS START'
+          end = '/* JSTECH ENHANCEMENTS END */'
+          if start in text and end in text:
+              a = text.index(start)
+              b = text.index(end, a) + len(end)
+              text = text[:a] + extra + text[b:]
+          else:
+              text = text.rstrip() + '\n\n' + extra + '\n'
+          app.write_text(text, encoding='utf-8')
+          PY
+
+      - name: Commit e publicar
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add app.js
+          if git diff --cached --quiet; then
+            echo 'Nenhuma alteração necessária.'
+          else
+            git commit -m 'Integrar melhorias do painel JS Tech'
+            git push
+          fi
