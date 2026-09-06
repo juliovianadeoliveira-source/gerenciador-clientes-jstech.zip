@@ -1,0 +1,53 @@
+name: Integrar melhorias JS Tech
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - enhancements.js
+      - jstech-bridge.js
+      - .github/workflows/integrate-enhancements.yml
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar repositorio
+        uses: actions/checkout@v4
+
+      - name: Integrar codigo
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          app=Path('app.js')
+          parts=[]
+          for name in ('jstech-bridge.js','enhancements.js'):
+              p=Path(name)
+              if p.exists():
+                  parts.append(p.read_text(encoding='utf-8'))
+          code='\n\n'.join(parts)
+          start='// JSTECH AUTO-INTEGRATION START'
+          end='// JSTECH AUTO-INTEGRATION END'
+          text=app.read_text(encoding='utf-8')
+          block=f'{start}\n{code}\n{end}'
+          if start in text and end in text:
+              a=text.index(start)
+              b=text.index(end,a)+len(end)
+              text=text[:a]+block+text[b:]
+          else:
+              text=text.rstrip()+'\n\n'+block+'\n'
+          app.write_text(text,encoding='utf-8')
+          PY
+
+      - name: Salvar alteracao
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add app.js
+          git diff --cached --quiet || git commit -m 'Corrigir integracao Supabase das melhorias JS Tech'
+          git push
