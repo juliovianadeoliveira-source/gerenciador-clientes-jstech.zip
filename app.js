@@ -320,3 +320,21 @@ init();
  }
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',fix);else fix();setInterval(fix,1000);
 })();
+
+
+/* PANEL USERS CONNECTOR 20260907 */
+(function(){
+ function install(){
+  const foot=document.querySelector('.sidebar-foot'),nav=document.querySelector('.sidebar nav[aria-label="Menu principal"]');
+  if(!nav||document.getElementById('panelUsersBtn'))return;
+  const b=document.createElement('button');b.id='panelUsersBtn';b.className='nav-item';b.innerHTML='<span>♙</span> Usuários e permissões';
+  b.onclick=openUsers;nav.appendChild(b);
+ }
+ function openUsers(){
+  let d=document.getElementById('panelUsersDialog');
+  if(!d){d=document.createElement('dialog');d.id='panelUsersDialog';d.className='modal';d.innerHTML='<form method="dialog" id="panelUsersForm"><div class="modal-head"><div><p class="eyebrow">Administração</p><h2>Criar usuário do painel</h2></div><button class="icon-btn" value="cancel">×</button></div><div class="form-grid"><label>Nome de exibição<input id="panelDisplayName" required></label><label>Usuário<input id="panelUsername" required></label><label>E-mail<input id="panelEmail" type="email" required></label><label>Senha<input id="panelPassword" type="password" minlength="8" required></label><label class="wide">Nível<select id="panelRole" required><option value="master_ultra">Master Ultra</option><option value="master_simples">Master simples</option><option value="revendedor">Revendedor</option></select></label></div><p id="panelUsersError" class="form-error"></p><div class="modal-actions"><button class="ghost" value="cancel">Cancelar</button><button class="primary" id="panelUsersSave" type="submit">Criar usuário</button></div></form>';document.body.appendChild(d);d.querySelector('form').addEventListener('submit',createUser)}
+  d.showModal();
+ }
+ async function createUser(e){e.preventDefault();const d=document.getElementById('panelUsersDialog'),err=document.getElementById('panelUsersError'),btn=document.getElementById('panelUsersSave');err.textContent='';btn.disabled=true;try{const body={display_name:document.getElementById('panelDisplayName').value.trim(),username:document.getElementById('panelUsername').value.trim(),email:document.getElementById('panelEmail').value.trim(),password:document.getElementById('panelPassword').value,role:document.getElementById('panelRole').value};await api('/functions/v1/create-panel-user',{method:'POST',body:JSON.stringify(body)});d.close();showToast('Usuário criado com sucesso.')}catch(x){err.textContent=x.message||'Não foi possível criar o usuário.'}finally{btn.disabled=false}}
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install);else install();setInterval(install,1500);
+})();
