@@ -322,19 +322,76 @@ init();
 })();
 
 
-/* PANEL USERS CONNECTOR 20260907 */
+/* PANEL USERS CONNECTOR 20260907 - corrigido */
 (function(){
- function install(){
-  const foot=document.querySelector('.sidebar-foot'),nav=document.querySelector('.sidebar nav[aria-label="Menu principal"]');
-  if(!nav||document.getElementById('panelUsersBtn'))return;
-  const b=document.createElement('button');b.id='panelUsersBtn';b.className='nav-item';b.innerHTML='<span>♙</span> Usuários e permissões';
-  b.onclick=openUsers;nav.appendChild(b);
- }
- function openUsers(){
-  let d=document.getElementById('panelUsersDialog');
-  if(!d){d=document.createElement('dialog');d.id='panelUsersDialog';d.className='modal';d.innerHTML='<form method="dialog" id="panelUsersForm"><div class="modal-head"><div><p class="eyebrow">Administração</p><h2>Criar usuário do painel</h2></div><button class="icon-btn" value="cancel">×</button></div><div class="form-grid"><label>Nome de exibição<input id="panelDisplayName" required></label><label>Usuário<input id="panelUsername" required></label><label>E-mail<input id="panelEmail" type="email" required></label><label>Senha<input id="panelPassword" type="password" minlength="8" required></label><label class="wide">Nível<select id="panelRole" required><option value="admin">Administrador</option><option value="master_ultra">Master Ultra</option><option value="master_simples">Master simples</option><option value="revendedor">Revendedor</option></select></label></div><p id="panelUsersError" class="form-error"></p><div class="modal-actions"><button class="ghost" value="cancel">Cancelar</button><button class="primary" id="panelUsersSave" type="submit">Criar usuário</button></div></form>';document.body.appendChild(d);d.querySelector('form').addEventListener('submit',createUser)}
-  d.showModal();
- }
- async function createUser(e){e.preventDefault();const d=document.getElementById('panelUsersDialog'),err=document.getElementById('panelUsersError'),btn=document.getElementById('panelUsersSave');err.textContent='';btn.disabled=true;try{const body={display_name:document.getElementById('panelDisplayName').value.trim(),username:document.getElementById('panelUsername').value.trim(),email:document.getElementById('panelEmail').value.trim(),password:document.getElementById('panelPassword').value,role:document.getElementById('panelRole').value};await api('/functions/v1/create-panel-user',{method:'POST',body:JSON.stringify(body)});d.close();showToast('Usuário criado com sucesso.')}catch(x){err.textContent=x.message||'Não foi possível criar o usuário.'}finally{btn.disabled=false}}
- if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install);else install();setInterval(install,1500);
+  function install(){
+    const nav=document.querySelector('.sidebar nav[aria-label="Menu principal"]');
+    if(!nav||document.getElementById('panelUsersBtn'))return;
+    const b=document.createElement('button');
+    b.id='panelUsersBtn';
+    b.className='nav-item';
+    b.innerHTML='<span>♙</span> Usuários e permissões';
+    b.onclick=openUsers;
+    nav.appendChild(b);
+  }
+
+  function openUsers(){
+    let d=document.getElementById('panelUsersDialog');
+    if(!d){
+      d=document.createElement('dialog');
+      d.id='panelUsersDialog';
+      d.className='modal';
+      d.innerHTML='<div class="modal-head"><div><p class="eyebrow">Administração</p><h2>Usuários do painel</h2></div><button type="button" class="icon-btn" data-close-panel-users>×</button></div><div id="panelUsersContent"><p>Carregando usuários...</p></div><hr><h3>Criar usuário</h3><form id="panelUsersForm" novalidate><div class="form-grid"><label>Nome de exibição<input id="panelDisplayName"></label><label>Usuário<input id="panelUsername"></label><label>E-mail<input id="panelEmail" type="email"></label><label>Senha<input id="panelPassword" type="password" minlength="8"><button type="button" class="ghost" id="panelPasswordToggle">Mostrar</button></label><label class="wide">Nível<select id="panelRole"><option value="admin">Administrador</option><option value="master_ultra">Master Ultra</option><option value="master_simples">Master simples</option><option value="revendedor">Revendedor</option></select></label></div><p id="panelUsersError" class="form-error"></p><div class="modal-actions"><button type="button" class="ghost" data-close-panel-users>Cancelar</button><button class="primary" id="panelUsersSave" type="submit">Criar usuário</button></div></form>';
+      document.body.appendChild(d);
+      d.querySelectorAll('[data-close-panel-users]').forEach(b=>b.addEventListener('click',()=>d.close()));
+      d.querySelector('#panelPasswordToggle').addEventListener('click',()=>{const p=d.querySelector('#panelPassword');p.type=p.type==='password'?'text':'password';d.querySelector('#panelPasswordToggle').textContent=p.type==='password'?'Mostrar':'Ocultar'});
+      d.querySelector('#panelUsersForm').addEventListener('submit',createUser);
+      d.addEventListener('click',e=>{if(e.target===d)d.close()});
+    }
+    d.showModal();
+    loadPanelUsers(d);
+  }
+
+  async function loadPanelUsers(d){
+    const box=d.querySelector('#panelUsersContent');
+    try{
+      const rows=await api('/rest/v1/panel_users?select=user_id,username,display_name,role,parent_user_id,active,created_at&order=created_at.desc');
+      if(!rows.length){box.innerHTML='<p>Nenhum usuário criado ainda.</p>';return}
+      box.innerHTML='<div class="table-wrap"><table><thead><tr><th>Nome</th><th>Usuário</th><th>Nível</th><th>Situação</th><th>Ações</th></tr></thead><tbody>'+rows.map(u=>'<tr><td>'+escapeHTML(u.display_name||'—')+'</td><td>'+escapeHTML(u.username||'—')+'</td><td>'+escapeHTML(u.role||'—')+'</td><td><span class="badge '+(u.active?'green':'red')+'">'+(u.active?'Ativo':'Bloqueado')+'</span></td><td><button type="button" class="action-btn" data-panel-edit="'+u.user_id+'">Editar</button><button type="button" class="action-btn" data-panel-block="'+u.user_id+'" data-active="'+u.active+'">'+(u.active?'Bloquear':'Desbloquear')+'</button><button type="button" class="action-btn danger" data-panel-delete="'+u.user_id+'">Excluir</button></td></tr>').join('')+'</tbody></table></div>';
+      box.querySelectorAll('[data-panel-edit]').forEach(b=>b.onclick=()=>editPanelUser(b.dataset.panelEdit,d));
+      box.querySelectorAll('[data-panel-block]').forEach(b=>b.onclick=()=>togglePanelUser(b.dataset.panelBlock,b.dataset.active==='true',d));
+      box.querySelectorAll('[data-panel-delete]').forEach(b=>b.onclick=()=>deletePanelUser(b.dataset.panelDelete,d));
+    }catch(e){box.innerHTML='<p class="form-error">'+escapeHTML(e.message)+'</p>'}
+  }
+
+  async function editPanelUser(id,d){
+    const name=prompt('Novo nome de exibição:');
+    if(name===null)return;
+    const role=prompt('Nível (admin, master_ultra, master_simples ou revendedor):');
+    if(role===null)return;
+    try{await api('/rest/v1/panel_users?user_id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({display_name:name.trim(),role:role.trim()})});showToast('Usuário atualizado.');loadPanelUsers(d)}catch(e){alert(e.message)}
+  }
+
+  async function togglePanelUser(id,active,d){
+    if(!confirm(active?'Bloquear este usuário?':'Desbloquear este usuário?'))return;
+    try{await api('/rest/v1/panel_users?user_id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({active:!active})});showToast(active?'Usuário bloqueado.':'Usuário desbloqueado.');loadPanelUsers(d)}catch(e){alert(e.message)}
+  }
+
+  async function deletePanelUser(id,d){
+    if(!confirm('Excluir este usuário do painel?'))return;
+    try{await api('/rest/v1/panel_users?user_id=eq.'+encodeURIComponent(id),{method:'DELETE',headers:{Prefer:'return=minimal'}});showToast('Usuário excluído do painel.');loadPanelUsers(d)}catch(e){alert(e.message)}
+  }
+
+  async function createUser(e){
+    e.preventDefault();
+    const d=document.getElementById('panelUsersDialog'),err=document.getElementById('panelUsersError'),btn=document.getElementById('panelUsersSave');
+    err.textContent='';
+    const body={display_name:document.getElementById('panelDisplayName').value.trim(),username:document.getElementById('panelUsername').value.trim(),email:document.getElementById('panelEmail').value.trim(),password:document.getElementById('panelPassword').value,role:document.getElementById('panelRole').value};
+    if(!body.display_name||!body.username||!body.email||!body.password){err.textContent='Preencha todos os campos para criar.';return}
+    btn.disabled=true;
+    try{await api('/functions/v1/create-panel-user',{method:'POST',body:JSON.stringify(body)});showToast('Usuário criado com sucesso.');e.target.reset();await loadPanelUsers(d)}catch(x){err.textContent=x.message||'Não foi possível criar o usuário.'}finally{btn.disabled=false}
+  }
+
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install);else install();
+  setInterval(install,1500);
 })();
