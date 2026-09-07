@@ -309,3 +309,14 @@ init();
  }
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',fix);else fix();setInterval(fix,1000);
 })();
+
+
+/* FORCE SIDEBAR ACTION ORDER 20260907 */
+(function(){
+ function fix(){
+  const foot=document.querySelector('.sidebar-foot'),exp=document.getElementById('exportBtn'),imp=document.querySelector('.file-button'),out=document.getElementById('logoutBtn'),trash=document.getElementById('trashBtn');
+  if(!foot)return;
+  [exp,imp,out,trash].filter(Boolean).forEach(x=>{x.classList.remove('ghost','full','text-button');x.classList.add('nav-item','sidebar-action');foot.appendChild(x)});
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',fix);else fix();setInterval(fix,1000);
+})();
