@@ -279,3 +279,11 @@ init();
   function style(){if(document.getElementById('sidebar-repair-css'))return;const s=document.createElement('style');s.id='sidebar-repair-css';s.textContent=css;document.head.appendChild(s)}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',style);else style();
 })();
+
+
+/* SIDEBAR CLEAN STYLE 20260907 */
+(function(){
+  const css='.sidebar nav{background:transparent!important;border:0!important;box-shadow:none!important}.sidebar nav .nav-item{background:transparent!important;border:0!important;border-radius:8px!important;box-shadow:none!important;color:inherit!important;text-align:left!important;padding:10px 12px!important;margin:0!important}.sidebar nav .nav-item:hover{background:rgba(255,255,255,.07)!important}.sidebar nav .nav-item.active{background:rgba(59,130,246,.16)!important;border-left:2px solid #3b82f6!important;color:#fff!important}.sidebar nav .nav-item span{background:transparent!important;border:0!important;box-shadow:none!important}.sidebar-foot{background:transparent!important;border:0!important;box-shadow:none!important}.sidebar-foot button,.sidebar-foot label{border-radius:8px!important;box-shadow:none!important}.brand-mark{box-shadow:none!important}';
+  function style(){if(document.getElementById('sidebar-clean-style'))return;const s=document.createElement('style');s.id='sidebar-clean-style';s.textContent=css;document.head.appendChild(s)}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',style);else style();
+})();
