@@ -21,3 +21,7 @@
 .field-hint{display:block;margin-top:6px;color:#8fa6bf;font-size:12px;line-height:1.35}
 .m3u-status{display:block;margin-top:5px;color:#43d99c;font-size:11px;line-height:1.35}
 
+
+/* Logout visible fix */
+.sidebar-foot #logoutBtn{display:flex!important;visibility:visible!important;opacity:1!important;position:relative!important;z-index:20!important;align-items:center;justify-content:center;width:100%;min-height:42px;margin-top:10px;color:#ffd5d5!important;background:#3a1820!important;border:1px solid #8b3d49!important;border-radius:10px;cursor:pointer;font-weight:700}
+.sidebar-foot #logoutBtn:hover{background:#5a202b!important;color:#fff!important}
