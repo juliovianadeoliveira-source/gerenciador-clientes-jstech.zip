@@ -57,3 +57,7 @@
 .sidebar-foot{border-top:0!important;margin-top:4px!important;padding-top:4px!important;gap:5px!important}
 .sidebar-foot p{padding:8px 12px!important;border-top:1px solid #22334b!important}
 .sidebar-foot .ghost,.sidebar-foot .text-button{border-radius:8px!important;min-height:40px!important}
+
+/* Prevent footer from covering navigation */
+.sidebar-foot{position:static!important;bottom:auto!important;background:transparent!important;flex-shrink:0!important}
+.sidebar nav{flex-shrink:0!important}
