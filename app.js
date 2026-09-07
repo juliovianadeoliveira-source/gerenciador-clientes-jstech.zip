@@ -295,3 +295,17 @@ init();
  function style(){if(document.getElementById('sidebar-foot-match-menu'))return;const s=document.createElement('style');s.id='sidebar-foot-match-menu';s.textContent=css;document.head.appendChild(s)}
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',style);else style();
 })();
+
+
+/* KEEP TRASH WITH SIDEBAR ACTIONS 20260907 */
+(function(){
+ function fix(){
+  const sb=document.querySelector('.sidebar'),nav=sb?.querySelector('nav[aria-label="Menu principal"]'),foot=sb?.querySelector('.sidebar-foot'),trash=document.getElementById('trashBtn');
+  if(!sb||!nav||!foot||!trash)return;
+  trash.classList.remove('ghost','full');trash.classList.add('nav-item','sidebar-action');
+  if(!foot.contains(trash))foot.insertBefore(trash,document.getElementById('logoutBtn')||null);
+  if(nav.contains(trash))foot.insertBefore(trash,document.getElementById('logoutBtn')||null);
+  [...nav.querySelectorAll('.nav-item')].filter(x=>x.id==='trashBtn'||x.classList.contains('sidebar-action')).forEach(x=>foot.insertBefore(x,document.getElementById('logoutBtn')||null));
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',fix);else fix();setInterval(fix,1000);
+})();
