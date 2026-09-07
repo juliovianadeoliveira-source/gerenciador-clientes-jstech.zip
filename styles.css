@@ -29,3 +29,11 @@
 /* Sidebar: keep account actions reachable */
 .sidebar{height:100vh;overflow-y:auto;box-sizing:border-box}
 .sidebar-foot{position:sticky;bottom:0;background:#08111f;padding-bottom:16px;z-index:30}
+
+/* Sidebar wider and fully scrollable */
+.app-shell{grid-template-columns:290px minmax(0,1fr)!important}
+.sidebar{width:290px!important;min-width:290px!important;padding:24px 18px!important;overflow-y:auto!important;overflow-x:hidden!important}
+.sidebar nav{min-width:0}
+.nav-item{white-space:normal!important;line-height:1.25!important;min-height:42px!important}
+.sidebar-foot{margin-top:24px!important;position:sticky!important;bottom:0!important;background:#08111f!important;padding:14px 0 18px!important}
+@media(max-width:900px){.app-shell{grid-template-columns:1fr!important}.sidebar{width:auto!important;min-width:0!important}}
