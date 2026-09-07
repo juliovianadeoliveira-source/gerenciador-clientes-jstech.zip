@@ -348,7 +348,7 @@ init();
   async function loadPanelUsers(){
     const box=document.getElementById('panelAccessContent');if(!box)return;
     try{
-      const rows=await api('/rest/v1/panel_users?select=user_id,username,display_name,role,active,expires_at,created_at&order=created_at.desc');
+      const rows=await api('/rest/v1/panel_users?select=user_id,username,display_name,email,role,active,expires_at,created_at&order=created_at.desc');
       window.panelAccessRows=rows;
       if(!rows.length){box.innerHTML='<p>Nenhum acesso cadastrado.</p>';return}
       const roleName={admin:'Administrador',master_ultra:'Master Ultra',master_simples:'Master Simples',revendedor:'Revendedor'};
@@ -386,8 +386,7 @@ init();
     if(!body.display_name||!body.username||!body.email||!body.password){err.textContent='Preencha nome, usuário, e-mail e senha.';return}
     btn.disabled=true;try{await api('/functions/v1/create-panel-user',{method:'POST',body:JSON.stringify(body)});d.close();showToast('Acesso criado com sucesso.');loadPanelUsers()}catch(x){err.textContent=x.message||'Não foi possível criar o acesso.'}finally{btn.disabled=false}
   }
-  async function editPanelUser(id){const name=prompt('Novo nome de exibição:');if(name===null)return;const role=prompt('Nível: admin, master_ultra, master_simples ou revendedor');if(role===null)return;try{await api('/rest/v1/panel_users?user_id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({display_name:name.trim(),role:role.trim()})});showToast('Acesso atualizado.');loadPanelUsers()}catch(e){alert(e.message)}}
-  async function togglePanelUser(id,active){if(!confirm(active?'Bloquear este acesso?':'Liberar este acesso?'))return;try{await api('/rest/v1/panel_users?user_id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({active:!active})});showToast(active?'Acesso bloqueado.':'Acesso liberado.');loadPanelUsers()}catch(e){alert(e.message)}}
+    async function togglePanelUser(id,active){if(!confirm(active?'Bloquear este acesso?':'Liberar este acesso?'))return;try{await api('/rest/v1/panel_users?user_id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({active:!active})});showToast(active?'Acesso bloqueado.':'Acesso liberado.');loadPanelUsers()}catch(e){alert(e.message)}}
   async function deletePanelUser(id){if(!confirm('Excluir este acesso?'))return;try{await api('/rest/v1/panel_users?user_id=eq.'+encodeURIComponent(id),{method:'DELETE',headers:{Prefer:'return=minimal'}});showToast('Acesso excluído.');loadPanelUsers()}catch(e){alert(e.message)}}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install);else install();setInterval(install,1500);
 })();
