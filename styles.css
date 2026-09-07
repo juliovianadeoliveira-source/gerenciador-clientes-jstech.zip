@@ -43,3 +43,11 @@
 .sidebar{width:250px!important;min-width:250px!important;padding:22px 14px!important}
 .sidebar-foot{padding-top:12px!important}
 @media(max-width:900px){.app-shell{grid-template-columns:1fr!important}.sidebar{width:auto!important;min-width:0!important}}
+
+/* Sidebar navigation organization */
+.sidebar nav{display:flex!important;flex-direction:column!important;gap:6px!important;margin-top:28px!important;padding-bottom:18px!important}
+.sidebar nav .nav-item{display:flex!important;align-items:center!important;gap:11px!important;width:100%!important;box-sizing:border-box!important;text-align:left!important;padding:11px 12px!important;margin:0!important;white-space:nowrap!important}
+.sidebar nav .nav-item span{flex:0 0 20px!important;text-align:center!important}
+.sidebar-foot{border-top:1px solid #22334b!important;margin-top:8px!important;display:flex!important;flex-direction:column!important;gap:8px!important}
+.sidebar-foot p{margin:0 0 3px!important;font-size:12px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+.sidebar-foot button,.sidebar-foot .file-button{margin:0!important}
