@@ -37,3 +37,9 @@
 .nav-item{white-space:normal!important;line-height:1.25!important;min-height:42px!important}
 .sidebar-foot{margin-top:24px!important;position:sticky!important;bottom:0!important;background:#08111f!important;padding:14px 0 18px!important}
 @media(max-width:900px){.app-shell{grid-template-columns:1fr!important}.sidebar{width:auto!important;min-width:0!important}}
+
+/* Sidebar balanced layout */
+.app-shell{grid-template-columns:250px minmax(0,1fr)!important}
+.sidebar{width:250px!important;min-width:250px!important;padding:22px 14px!important}
+.sidebar-foot{padding-top:12px!important}
+@media(max-width:900px){.app-shell{grid-template-columns:1fr!important}.sidebar{width:auto!important;min-width:0!important}}
