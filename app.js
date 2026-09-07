@@ -248,3 +248,6 @@ init();
   const oldRender=window.render;if(typeof oldRender==='function')window.render=function(){const r=oldRender.apply(this,arguments);setTimeout(()=>{installTrashButton();installM3URefresh()},0);return r};
   document.addEventListener('DOMContentLoaded',()=>{installTrashButton();installM3URefresh()});setInterval(()=>{installTrashButton();installM3URefresh()},1500);
 })();
+
+/* FINAL SIDEBAR ORDER FIX */
+(function(){function fix(){const s=document.createElement('style');s.id='final-sidebar-order';s.textContent='.sidebar{overflow-y:auto!important}.sidebar nav{display:flex!important;flex-direction:column!important;gap:4px!important}.sidebar nav .nav-item{display:flex!important;width:100%!important;box-sizing:border-box!important;white-space:normal!important}.sidebar-foot{position:static!important;display:flex!important;flex-direction:column!important;gap:6px!important;margin-top:4px!important;border-top:0!important;background:transparent!important}.sidebar-foot button,.sidebar-foot label{display:flex!important;width:100%!important;box-sizing:border-box!important}.sidebar-status{display:block!important;margin:18px 0 8px!important}';document.head.appendChild(s)}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',fix);else fix()})();
