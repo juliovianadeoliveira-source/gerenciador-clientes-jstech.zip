@@ -7,7 +7,16 @@
   <meta name="description" content="Controle particular de clientes, vendas, renovações e vencimentos da JS Tech.">
   <title>JS Tech | Controle de Clientes</title>
   <link rel="stylesheet" href="styles.css?v=20260907-menu-v7">
-</head>
+
+  <!-- SIDEBAR FOOT INLINE OVERRIDE 20260907 -->
+  <style id="sidebar-foot-inline-override">
+    .sidebar .sidebar-foot{display:flex!important;flex-direction:column!important;gap:2px!important;padding:8px 0 0!important;margin-top:8px!important;background:transparent!important;border:0!important;border-top:1px solid rgba(255,255,255,.08)!important;box-shadow:none!important}
+    .sidebar .sidebar-foot>*{display:flex!important;align-items:center!important;width:100%!important;min-height:40px!important;box-sizing:border-box!important;margin:0!important;padding:10px 12px!important;background:transparent!important;border:0!important;border-left:2px solid transparent!important;border-radius:8px!important;box-shadow:none!important;color:inherit!important;font:inherit!important;font-weight:600!important;text-align:left!important}
+    .sidebar .sidebar-foot>*:hover{background:rgba(255,255,255,.07)!important;border-left-color:rgba(59,130,246,.55)!important;color:#fff!important}
+    .sidebar .sidebar-foot #logoutBtn{background:transparent!important;color:inherit!important;border-color:transparent!important}
+    .sidebar .sidebar-foot input{display:none!important}
+  </style>
+  </head>
 <body>
   <section id="loginScreen" class="login-screen">
     <div class="login-card">
@@ -246,7 +255,7 @@
   </dialog>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <script src="app.js?v=20260907-sidebar-unified"></script>
+  <script src="app.js?v=20260907-sidebar-inline-final"></script>
   <script src="ui-fix.js?v=20260906-1"></script>
 </body>
 </html>
