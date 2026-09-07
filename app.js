@@ -330,7 +330,7 @@ init();
     const b=document.createElement('button');
     b.id='panelUsersBtn';
     b.className='nav-item';
-    b.innerHTML='<span>♙</span> Usuários e permissões';
+    b.innerHTML='<span>♙</span> Usuários e revendedores';
     b.onclick=openUsers;
     nav.appendChild(b);
   }
