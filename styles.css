@@ -51,3 +51,9 @@
 .sidebar-foot{border-top:1px solid #22334b!important;margin-top:8px!important;display:flex!important;flex-direction:column!important;gap:8px!important}
 .sidebar-foot p{margin:0 0 3px!important;font-size:12px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
 .sidebar-foot button,.sidebar-foot .file-button{margin:0!important}
+
+/* Unified sidebar list */
+.sidebar nav{margin-top:18px!important;padding-bottom:0!important;gap:3px!important}
+.sidebar-foot{border-top:0!important;margin-top:4px!important;padding-top:4px!important;gap:5px!important}
+.sidebar-foot p{padding:8px 12px!important;border-top:1px solid #22334b!important}
+.sidebar-foot .ghost,.sidebar-foot .text-button{border-radius:8px!important;min-height:40px!important}
