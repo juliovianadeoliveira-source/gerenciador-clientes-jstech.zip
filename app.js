@@ -251,3 +251,31 @@ init();
 
 /* FINAL SIDEBAR ORDER FIX */
 (function(){function fix(){const s=document.createElement('style');s.id='final-sidebar-order';s.textContent='.sidebar{overflow-y:auto!important}.sidebar nav{display:flex!important;flex-direction:column!important;gap:4px!important}.sidebar nav .nav-item{display:flex!important;width:100%!important;box-sizing:border-box!important;white-space:normal!important}.sidebar-foot{position:static!important;display:flex!important;flex-direction:column!important;gap:6px!important;margin-top:4px!important;border-top:0!important;background:transparent!important}.sidebar-foot button,.sidebar-foot label{display:flex!important;width:100%!important;box-sizing:border-box!important}.sidebar-status{display:block!important;margin:18px 0 8px!important}';document.head.appendChild(s)}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',fix);else fix()})();
+
+
+/* DOM SIDEBAR REPAIR 20260907 */
+(function(){
+  const order=['todos','hoje','amanha','proximos','vencidos','ativos','cancelados','finance','resellers','apps'];
+  function repair(){
+    const sidebar=document.querySelector('.sidebar');
+    const nav=sidebar&&sidebar.querySelector('nav[aria-label="Menu principal"]');
+    const foot=sidebar&&sidebar.querySelector('.sidebar-foot');
+    if(!sidebar||!nav||!foot)return;
+    const all=[...sidebar.querySelectorAll('.nav-item')];
+    const map=new Map(all.map(item=>[item.dataset.filter||item.dataset.view,item]));
+    order.forEach(key=>{const item=map.get(key);if(item)nav.appendChild(item)});
+    all.filter(item=>!order.includes(item.dataset.filter||item.dataset.view)).forEach(item=>nav.appendChild(item));
+    sidebar.insertBefore(nav,foot);
+    const status=sidebar.querySelector('#connectedEmail,.sidebar-status');
+    if(status)sidebar.insertBefore(status,nav);
+    sidebar.classList.add('sidebar-repaired');
+  }
+  function boot(){repair();setTimeout(repair,300);setTimeout(repair,1200);}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
+  setInterval(repair,2500);
+})();
+(function(){
+  const css='.sidebar{display:flex!important;flex-direction:column!important;overflow-y:auto!important;min-height:100vh!important}.sidebar nav{display:flex!important;flex-direction:column!important;flex:0 0 auto!important;gap:4px!important;width:100%!important;order:0!important}.sidebar nav .nav-item{display:flex!important;flex:0 0 auto!important;width:100%!important;box-sizing:border-box!important}.sidebar-foot{order:1!important;position:static!important;display:flex!important;flex-direction:column!important;gap:6px!important;width:100%!important;flex-shrink:0!important;margin-top:12px!important}.sidebar-foot button,.sidebar-foot label{display:flex!important;width:100%!important;box-sizing:border-box!important}.sidebar-status{order:-1!important;flex:0 0 auto!important}';
+  function style(){if(document.getElementById('sidebar-repair-css'))return;const s=document.createElement('style');s.id='sidebar-repair-css';s.textContent=css;document.head.appendChild(s)}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',style);else style();
+})();
