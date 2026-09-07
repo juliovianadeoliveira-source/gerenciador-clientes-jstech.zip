@@ -348,6 +348,7 @@ init();
     const box=document.getElementById('panelAccessContent');if(!box)return;
     try{
       const rows=await api('/rest/v1/panel_users?select=user_id,username,display_name,role,active,expires_at,created_at&order=created_at.desc');
+      window.panelAccessRows=rows;
       if(!rows.length){box.innerHTML='<p>Nenhum acesso cadastrado.</p>';return}
       const roleName={admin:'Administrador',master_ultra:'Master Ultra',master_simples:'Master Simples',revendedor:'Revendedor'};
       box.innerHTML='<table><thead><tr><th>Nome</th><th>Usuário</th><th>Nível</th><th>Bloqueio</th><th>Ações</th></tr></thead><tbody>'+rows.map(u=>'<tr><td><strong>'+escapeHTML(u.display_name||'—')+'</strong></td><td>'+escapeHTML(u.username||'—')+'</td><td>'+escapeHTML(roleName[u.role]||u.role||'—')+'</td><td><span class="badge '+(u.active?'green':'red')+'">'+(u.active?'Ativo':'Bloqueado')+'</span></td><td><div class="panel-access-actions"><button type="button" class="action-btn" data-access-edit="'+u.user_id+'">Editar</button><button type="button" class="action-btn" data-access-toggle="'+u.user_id+'" data-active="'+u.active+'">'+(u.active?'Bloquear':'Liberar')+'</button><button type="button" class="action-btn danger" data-access-delete="'+u.user_id+'">Excluir</button></div></td></tr>').join('')+'</tbody></table>';
@@ -355,6 +356,16 @@ init();
       box.querySelectorAll('[data-access-toggle]').forEach(x=>x.onclick=()=>togglePanelUser(x.dataset.accessToggle,x.dataset.active==='true'));
       box.querySelectorAll('[data-access-delete]').forEach(x=>x.onclick=()=>deletePanelUser(x.dataset.accessDelete));
     }catch(e){box.innerHTML='<p class="form-error">'+escapeHTML(e.message)+'</p>'}
+  }
+  function editPanelUser(id){
+    const u=(window.panelAccessRows||[]).find(x=>String(x.user_id)===String(id));if(!u)return;
+    let d=document.getElementById('panelEditDialog');
+    if(!d){
+      d=document.createElement('dialog');d.id='panelEditDialog';d.className='modal panel-access-modal';
+      d.innerHTML='<form id="panelEditForm" class="panel-access-form" novalidate><div class="modal-head"><div><p class="eyebrow">Revendedores</p><h2>Editar acesso</h2></div><button type="button" class="icon-btn" id="closePanelEdit">×</button></div><div class="form-grid"><label>Nome de exibição<input id="editDisplayName"></label><label>Usuário<input id="editUsername" readonly></label><label>E-mail<input id="editEmail" type="email"></label><label>Nova senha<input id="editPassword" type="password" minlength="8"><small>Deixe vazio para manter a senha atual.</small></label><label>Nível<select id="editRole"><option value="admin">Administrador</option><option value="master_ultra">Master Ultra</option><option value="master_simples">Master Simples</option><option value="revendedor">Revendedor</option></select></label><label>Data para bloquear<input id="editExpiresAt" type="datetime-local"><small>Deixe vazio para não bloquear por data.</small></label></div><p id="panelEditError" class="form-error"></p><div class="modal-actions"><button type="button" class="ghost" id="cancelPanelEdit">Cancelar</button><button type="submit" class="primary">Salvar alterações</button></div></form>';
+      document.body.appendChild(d);d.querySelector('#closePanelEdit').onclick=()=>d.close();d.querySelector('#cancelPanelEdit').onclick=()=>d.close();d.querySelector('#panelEditForm').onsubmit=async e=>{e.preventDefault();const err=d.querySelector('#panelEditError'),body={user_id:d.querySelector('#editUsername').dataset.id,display_name:d.querySelector('#editDisplayName').value.trim(),email:d.querySelector('#editEmail').value.trim(),password:d.querySelector('#editPassword').value,role:d.querySelector('#editRole').value,expires_at:d.querySelector('#editExpiresAt').value?new Date(d.querySelector('#editExpiresAt').value).toISOString():null};try{await api('/functions/v1/manage-panel-user',{method:'POST',body:JSON.stringify({action:'update',...body})});d.close();showToast('Acesso atualizado.');loadPanelUsers()}catch(x){err.textContent=x.message||'Não foi possível editar. Publique a função manage-panel-user no Supabase.'}}};
+    }
+    d.querySelector('#editDisplayName').value=u.display_name||'';d.querySelector('#editUsername').value=u.username||'';d.querySelector('#editUsername').dataset.id=u.user_id;d.querySelector('#editEmail').value=u.email||'';d.querySelector('#editPassword').value='';d.querySelector('#editRole').value=u.role||'revendedor';d.querySelector('#editExpiresAt').value=u.expires_at?new Date(u.expires_at).toISOString().slice(0,16):'';d.querySelector('#panelEditError').textContent='';d.showModal();
   }
   function showCreateDialog(){
     let d=document.getElementById('panelCreateDialog');
