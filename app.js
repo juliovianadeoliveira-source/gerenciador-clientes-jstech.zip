@@ -322,76 +322,60 @@ init();
 })();
 
 
-/* PANEL USERS CONNECTOR 20260907 - corrigido */
+/* REVENDAS / ACESSOS 20260907 */
 (function(){
+  const css='.panel-access-manager{margin:18px 0;padding:18px;border:1px solid #243754;border-radius:14px;background:#101f35}.panel-access-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}.panel-access-head h3{margin:0}.panel-access-table{width:100%;overflow:auto}.panel-access-table table{min-width:760px}.panel-access-actions{display:flex;gap:6px;flex-wrap:wrap}.panel-access-actions button{font-size:12px;padding:7px 10px}.panel-access-modal{max-width:720px}.panel-access-form .form-grid{margin-top:14px}';
+  function style(){if(document.getElementById('panel-access-css'))return;const s=document.createElement('style');s.id='panel-access-css';s.textContent=css;document.head.appendChild(s)}
   function install(){
-    const nav=document.querySelector('.sidebar nav[aria-label="Menu principal"]');
-    if(!nav||document.getElementById('panelUsersBtn'))return;
-    const b=document.createElement('button');
-    b.id='panelUsersBtn';
-    b.className='nav-item';
-    b.innerHTML='<span>♙</span> Usuários e revendedores';
-    b.onclick=openUsers;
-    nav.appendChild(b);
+    style();
+    const section=document.getElementById('resellersSection'),tools=section?.querySelector('.panel-head .tools');
+    if(!section||!tools)return;
+    const old=document.getElementById('panelUsersBtn');if(old)old.remove();
+    let b=document.getElementById('panelAccessBtn');
+    if(!b){b=document.createElement('button');b.id='panelAccessBtn';b.type='button';b.className='ghost';b.textContent='Usuários do painel';tools.insertBefore(b,tools.firstChild);b.onclick=toggleAccessManager}
   }
-
-  function openUsers(){
-    let d=document.getElementById('panelUsersDialog');
-    if(!d){
-      d=document.createElement('dialog');
-      d.id='panelUsersDialog';
-      d.className='modal';
-      d.innerHTML='<div class="modal-head"><div><p class="eyebrow">Administração</p><h2>Usuários do painel</h2></div><button type="button" class="icon-btn" data-close-panel-users>×</button></div><div id="panelUsersContent"><p>Carregando usuários...</p></div><hr><h3>Criar usuário</h3><form id="panelUsersForm" novalidate><div class="form-grid"><label>Nome de exibição<input id="panelDisplayName"></label><label>Usuário<input id="panelUsername"></label><label>E-mail<input id="panelEmail" type="email"></label><label>Senha<input id="panelPassword" type="password" minlength="8"><button type="button" class="ghost" id="panelPasswordToggle">Mostrar</button></label><label class="wide">Nível<select id="panelRole"><option value="admin">Administrador</option><option value="master_ultra">Master Ultra</option><option value="master_simples">Master simples</option><option value="revendedor">Revendedor</option></select></label></div><p id="panelUsersError" class="form-error"></p><div class="modal-actions"><button type="button" class="ghost" data-close-panel-users>Cancelar</button><button class="primary" id="panelUsersSave" type="submit">Criar usuário</button></div></form>';
-      document.body.appendChild(d);
-      d.querySelectorAll('[data-close-panel-users]').forEach(b=>b.addEventListener('click',()=>d.close()));
-      d.querySelector('#panelPasswordToggle').addEventListener('click',()=>{const p=d.querySelector('#panelPassword');p.type=p.type==='password'?'text':'password';d.querySelector('#panelPasswordToggle').textContent=p.type==='password'?'Mostrar':'Ocultar'});
-      d.querySelector('#panelUsersForm').addEventListener('submit',createUser);
-      d.addEventListener('click',e=>{if(e.target===d)d.close()});
+  function toggleAccessManager(){
+    let box=document.getElementById('panelAccessManager');
+    if(!box){
+      box=document.createElement('section');box.id='panelAccessManager';box.className='panel-access-manager';
+      box.innerHTML='<div class="panel-access-head"><div><h3>Acessos dos revendedores</h3><p>Veja quem já está cadastrado e controle o acesso ao painel.</p></div><button type="button" class="primary" id="newPanelAccessBtn">+ Novo acesso</button></div><div class="panel-access-table" id="panelAccessContent">Carregando...</div>';
+      document.getElementById('resellersSection').insertBefore(box,document.getElementById('resellersTree'));
+      box.querySelector('#newPanelAccessBtn').onclick=showCreateDialog;
     }
-    d.showModal();
-    loadPanelUsers(d);
+    box.hidden=!box.hidden; if(!box.hidden)loadPanelUsers();
   }
-
-  async function loadPanelUsers(d){
-    const box=d.querySelector('#panelUsersContent');
+  async function loadPanelUsers(){
+    const box=document.getElementById('panelAccessContent');if(!box)return;
     try{
-      const rows=await api('/rest/v1/panel_users?select=user_id,username,display_name,role,parent_user_id,active,created_at&order=created_at.desc');
-      if(!rows.length){box.innerHTML='<p>Nenhum usuário criado ainda.</p>';return}
-      box.innerHTML='<div class="table-wrap"><table><thead><tr><th>Nome</th><th>Usuário</th><th>Nível</th><th>Situação</th><th>Ações</th></tr></thead><tbody>'+rows.map(u=>'<tr><td>'+escapeHTML(u.display_name||'—')+'</td><td>'+escapeHTML(u.username||'—')+'</td><td>'+escapeHTML(u.role||'—')+'</td><td><span class="badge '+(u.active?'green':'red')+'">'+(u.active?'Ativo':'Bloqueado')+'</span></td><td><button type="button" class="action-btn" data-panel-edit="'+u.user_id+'">Editar</button><button type="button" class="action-btn" data-panel-block="'+u.user_id+'" data-active="'+u.active+'">'+(u.active?'Bloquear':'Desbloquear')+'</button><button type="button" class="action-btn danger" data-panel-delete="'+u.user_id+'">Excluir</button></td></tr>').join('')+'</tbody></table></div>';
-      box.querySelectorAll('[data-panel-edit]').forEach(b=>b.onclick=()=>editPanelUser(b.dataset.panelEdit,d));
-      box.querySelectorAll('[data-panel-block]').forEach(b=>b.onclick=()=>togglePanelUser(b.dataset.panelBlock,b.dataset.active==='true',d));
-      box.querySelectorAll('[data-panel-delete]').forEach(b=>b.onclick=()=>deletePanelUser(b.dataset.panelDelete,d));
+      const rows=await api('/rest/v1/panel_users?select=user_id,username,display_name,role,active,expires_at,created_at&order=created_at.desc');
+      if(!rows.length){box.innerHTML='<p>Nenhum acesso cadastrado.</p>';return}
+      const roleName={admin:'Administrador',master_ultra:'Master Ultra',master_simples:'Master Simples',revendedor:'Revendedor'};
+      box.innerHTML='<table><thead><tr><th>Nome</th><th>Usuário</th><th>Nível</th><th>Bloqueio</th><th>Ações</th></tr></thead><tbody>'+rows.map(u=>'<tr><td><strong>'+escapeHTML(u.display_name||'—')+'</strong></td><td>'+escapeHTML(u.username||'—')+'</td><td>'+escapeHTML(roleName[u.role]||u.role||'—')+'</td><td><span class="badge '+(u.active?'green':'red')+'">'+(u.active?'Ativo':'Bloqueado')+'</span></td><td><div class="panel-access-actions"><button type="button" class="action-btn" data-access-edit="'+u.user_id+'">Editar</button><button type="button" class="action-btn" data-access-toggle="'+u.user_id+'" data-active="'+u.active+'">'+(u.active?'Bloquear':'Liberar')+'</button><button type="button" class="action-btn danger" data-access-delete="'+u.user_id+'">Excluir</button></div></td></tr>').join('')+'</tbody></table>';
+      box.querySelectorAll('[data-access-edit]').forEach(x=>x.onclick=()=>editPanelUser(x.dataset.accessEdit));
+      box.querySelectorAll('[data-access-toggle]').forEach(x=>x.onclick=()=>togglePanelUser(x.dataset.accessToggle,x.dataset.active==='true'));
+      box.querySelectorAll('[data-access-delete]').forEach(x=>x.onclick=()=>deletePanelUser(x.dataset.accessDelete));
     }catch(e){box.innerHTML='<p class="form-error">'+escapeHTML(e.message)+'</p>'}
   }
-
-  async function editPanelUser(id,d){
-    const name=prompt('Novo nome de exibição:');
-    if(name===null)return;
-    const role=prompt('Nível (admin, master_ultra, master_simples ou revendedor):');
-    if(role===null)return;
-    try{await api('/rest/v1/panel_users?user_id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({display_name:name.trim(),role:role.trim()})});showToast('Usuário atualizado.');loadPanelUsers(d)}catch(e){alert(e.message)}
+  function showCreateDialog(){
+    let d=document.getElementById('panelCreateDialog');
+    if(!d){
+      d=document.createElement('dialog');d.id='panelCreateDialog';d.className='modal panel-access-modal';
+      d.innerHTML='<form id="panelCreateForm" class="panel-access-form" novalidate><div class="modal-head"><div><p class="eyebrow">Revendedores</p><h2>Novo acesso ao painel</h2></div><button type="button" class="icon-btn" id="closePanelCreate">×</button></div><div class="form-grid"><label>Nome de exibição<input id="panelDisplayName"></label><label>Usuário<input id="panelUsername"></label><label>E-mail<input id="panelEmail" type="email"></label><label>Senha<input id="panelPassword" type="password" minlength="8"><button type="button" class="ghost" id="panelPasswordToggle">Mostrar</button></label><label class="wide">Nível<select id="panelRole"><option value="master_ultra">Master Ultra</option><option value="master_simples">Master Simples</option><option value="revendedor">Revendedor</option></select></label><label class="wide">Data para bloquear o painel<input id="panelExpiresAt" type="datetime-local"><small>Deixe vazio para não definir data.</small></label></div><p id="panelCreateError" class="form-error"></p><div class="modal-actions"><button type="button" class="ghost" id="cancelPanelCreate">Cancelar</button><button type="submit" class="primary" id="savePanelCreate">Criar acesso</button></div></form>';
+      document.body.appendChild(d);
+      d.querySelector('#closePanelCreate').onclick=()=>d.close();d.querySelector('#cancelPanelCreate').onclick=()=>d.close();
+      d.querySelector('#panelPasswordToggle').onclick=()=>{const p=d.querySelector('#panelPassword');p.type=p.type==='password'?'text':'password';d.querySelector('#panelPasswordToggle').textContent=p.type==='password'?'Mostrar':'Ocultar'};
+      d.querySelector('#panelCreateForm').onsubmit=createPanelUser;
+    }
+    d.querySelector('#panelCreateForm').reset();d.querySelector('#panelCreateError').textContent='';d.showModal();
   }
-
-  async function togglePanelUser(id,active,d){
-    if(!confirm(active?'Bloquear este usuário?':'Desbloquear este usuário?'))return;
-    try{await api('/rest/v1/panel_users?user_id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({active:!active})});showToast(active?'Usuário bloqueado.':'Usuário desbloqueado.');loadPanelUsers(d)}catch(e){alert(e.message)}
+  async function createPanelUser(e){
+    e.preventDefault();const d=document.getElementById('panelCreateDialog'),err=document.getElementById('panelCreateError'),btn=document.getElementById('savePanelCreate');
+    const body={display_name:$('panelDisplayName').value.trim(),username:$('panelUsername').value.trim(),email:$('panelEmail').value.trim(),password:$('panelPassword').value,role:$('panelRole').value,expires_at:$('panelExpiresAt').value?new Date($('panelExpiresAt').value).toISOString():null};
+    if(!body.display_name||!body.username||!body.email||!body.password){err.textContent='Preencha nome, usuário, e-mail e senha.';return}
+    btn.disabled=true;try{await api('/functions/v1/create-panel-user',{method:'POST',body:JSON.stringify(body)});d.close();showToast('Acesso criado com sucesso.');loadPanelUsers()}catch(x){err.textContent=x.message||'Não foi possível criar o acesso.'}finally{btn.disabled=false}
   }
-
-  async function deletePanelUser(id,d){
-    if(!confirm('Excluir este usuário do painel?'))return;
-    try{await api('/rest/v1/panel_users?user_id=eq.'+encodeURIComponent(id),{method:'DELETE',headers:{Prefer:'return=minimal'}});showToast('Usuário excluído do painel.');loadPanelUsers(d)}catch(e){alert(e.message)}
-  }
-
-  async function createUser(e){
-    e.preventDefault();
-    const d=document.getElementById('panelUsersDialog'),err=document.getElementById('panelUsersError'),btn=document.getElementById('panelUsersSave');
-    err.textContent='';
-    const body={display_name:document.getElementById('panelDisplayName').value.trim(),username:document.getElementById('panelUsername').value.trim(),email:document.getElementById('panelEmail').value.trim(),password:document.getElementById('panelPassword').value,role:document.getElementById('panelRole').value};
-    if(!body.display_name||!body.username||!body.email||!body.password){err.textContent='Preencha todos os campos para criar.';return}
-    btn.disabled=true;
-    try{await api('/functions/v1/create-panel-user',{method:'POST',body:JSON.stringify(body)});showToast('Usuário criado com sucesso.');e.target.reset();await loadPanelUsers(d)}catch(x){err.textContent=x.message||'Não foi possível criar o usuário.'}finally{btn.disabled=false}
-  }
-
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install);else install();
-  setInterval(install,1500);
+  async function editPanelUser(id){const name=prompt('Novo nome de exibição:');if(name===null)return;const role=prompt('Nível: admin, master_ultra, master_simples ou revendedor');if(role===null)return;try{await api('/rest/v1/panel_users?user_id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({display_name:name.trim(),role:role.trim()})});showToast('Acesso atualizado.');loadPanelUsers()}catch(e){alert(e.message)}}
+  async function togglePanelUser(id,active){if(!confirm(active?'Bloquear este acesso?':'Liberar este acesso?'))return;try{await api('/rest/v1/panel_users?user_id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({active:!active})});showToast(active?'Acesso bloqueado.':'Acesso liberado.');loadPanelUsers()}catch(e){alert(e.message)}}
+  async function deletePanelUser(id){if(!confirm('Excluir este acesso?'))return;try{await api('/rest/v1/panel_users?user_id=eq.'+encodeURIComponent(id),{method:'DELETE',headers:{Prefer:'return=minimal'}});showToast('Acesso excluído.');loadPanelUsers()}catch(e){alert(e.message)}}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install);else install();setInterval(install,1500);
 })();
