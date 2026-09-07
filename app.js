@@ -220,3 +220,31 @@ init();
 
 /* Tema escuro e organização da aba financeira */
 (function(){const id='jstech-finance-dark';if(!document.getElementById(id)){const st=document.createElement('style');st.id=id;st.textContent=`#jstech-finance,#je-alerts{background:#0d1a2c!important;color:#f6f8fc!important;border:1px solid #22334b!important;box-shadow:0 16px 38px rgba(0,0,0,.28)!important}#jstech-finance .je-stat{background:#102039!important;color:#aebacf!important;border:1px solid #22334b}#jstech-finance .je-stat b{color:#fff!important;margin-top:5px}#jstech-finance .je-table-wrap{overflow-x:auto;margin-top:14px;border:1px solid #22334b;border-radius:12px}#jstech-finance .je-table{margin:0!important;background:#0a1626!important;min-width:700px}#jstech-finance .je-table th{background:#091421!important;color:#91a0b6!important;border-color:#22334b!important}#jstech-finance .je-table td{background:#0d1a2c!important;color:#f6f8fc!important;border-color:#22334b!important}#jstech-finance .je-actions{margin:16px 0 4px}#jstech-finance .je-empty{padding:28px;text-align:center;color:#91a0b6;background:#0a1626;border:1px dashed #2c4260;border-radius:12px;margin-top:14px}@media(max-width:760px){#jstech-finance{padding:14px}.je-actions .je-btn{flex:1 1 145px}}`;document.head.appendChild(st)}})();
+
+
+/* JSTECH RELIABILITY V1 */
+(function(){
+  const oldDelete=window.deleteClient;
+  window.deleteClient=async function(id){
+    const c=(window.clients||[]).find(x=>String(x.id)===String(id));
+    if(!c||!confirm('Mover '+c.name+' para a lixeira?'))return;
+    try{setBusy(true);
+      const apps=(c.devices||[]);
+      await api('/rest/v1/client_trash',{method:'POST',headers:{Prefer:'return=minimal'},body:JSON.stringify({client_id:c.id,client_name:c.name,snapshot:{client:c,apps}})});
+      await api('/rest/v1/clients?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({deleted_at:new Date().toISOString()})});
+      clients=clients.filter(x=>String(x.id)!==String(id));render();showToast('Cliente movido para a lixeira.');
+    }catch(e){alert(e.message||'Não foi possível mover para a lixeira.')}finally{setBusy(false)}
+  };
+  async function trashModal(){
+    const rows=await api('/rest/v1/client_trash?select=*&order=deleted_at.desc');
+    const html=rows.length?rows.map(x=>'<div class="history-item"><strong>'+escapeHTML(x.client_name||'Cliente')+'</strong><span>'+dateBR(String(x.deleted_at).slice(0,10))+' <button class="action-btn" data-restore-trash="'+x.id+'" data-client-id="'+x.client_id+'">Restaurar</button></span></div>').join(''):'<p>Nenhum cliente na lixeira.</p>';
+    let d=document.getElementById('trashDialog');if(!d){d=document.createElement('dialog');d.id='trashDialog';d.className='modal';d.innerHTML='<div class="modal-head"><div><p class="eyebrow">Recuperação</p><h2>Lixeira</h2></div><button class="icon-btn" data-close-trash>×</button></div><div id="trashContent" class="timeline"></div>';document.body.appendChild(d)}
+    d.querySelector('#trashContent').innerHTML=html;d.showModal();
+    d.querySelectorAll('[data-restore-trash]').forEach(b=>b.onclick=async()=>{try{setBusy(true);await api('/rest/v1/clients?id=eq.'+encodeURIComponent(b.dataset.clientId),{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({deleted_at:null})});await api('/rest/v1/client_trash?id=eq.'+encodeURIComponent(b.dataset.restoreTrash),{method:'DELETE'});d.close();await loadData();showToast('Cliente restaurado.')}catch(e){alert(e.message)}finally{setBusy(false)}});
+    d.querySelector('[data-close-trash]').onclick=()=>d.close();
+  }
+  function installTrashButton(){const foot=document.querySelector('.sidebar-foot');if(!foot||document.getElementById('trashBtn'))return;const b=document.createElement('button');b.id='trashBtn';b.className='ghost full';b.textContent='🗑 Lixeira';b.onclick=trashModal;foot.insertBefore(b,document.getElementById('logoutBtn'));}
+  function installM3URefresh(){document.querySelectorAll('[data-device="m3uUrl"]').forEach(input=>{if(input.dataset.refreshReady)return;input.dataset.refreshReady='1';const b=document.createElement('button');b.type='button';b.className='ghost small';b.textContent='Atualizar dados da URL';b.onclick=()=>{const row=input.closest('.device-entry');const status=row?.querySelector('.m3u-status');if(typeof checkM3UDetails==='function')checkM3UDetails(input.value.trim(),row,status);};input.parentElement.appendChild(b)});}
+  const oldRender=window.render;if(typeof oldRender==='function')window.render=function(){const r=oldRender.apply(this,arguments);setTimeout(()=>{installTrashButton();installM3URefresh()},0);return r};
+  document.addEventListener('DOMContentLoaded',()=>{installTrashButton();installM3URefresh()});setInterval(()=>{installTrashButton();installM3URefresh()},1500);
+})();
