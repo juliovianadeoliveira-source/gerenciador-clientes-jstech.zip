@@ -346,6 +346,9 @@ init();
     }
     box.hidden=!box.hidden; if(!box.hidden)loadPanelUsers();
   }
+  function panelDaysLeft(date){if(!date)return null;return Math.ceil((new Date(date).getTime()-Date.now())/86400000)}
+  function panelExpiryLabel(u){if(!u.expires_at)return '<span class="muted">Sem data</span>';const d=panelDaysLeft(u.expires_at);const text=d<0?'Vencido':d===0?'Vence hoje':'Restam '+d+' dias';return '<span class="panel-expiry '+(d<=0?'danger-text':'')+'">'+text+'</span><small>'+new Date(u.expires_at).toLocaleDateString('pt-BR')+'</small>'}
+  async function renewPanelUser(id){const u=(window.panelAccessRows||[]).find(x=>String(x.user_id)===String(id));if(!u)return;const raw=prompt('Dias para renovar: 30, 90, 180 ou 365','30');if(raw===null)return;const days=Number(raw);if(![30,90,180,365].includes(days)){alert('Escolha 30, 90, 180 ou 365 dias.');return}const base=u.expires_at&&new Date(u.expires_at).getTime()>Date.now()?new Date(u.expires_at):new Date();base.setDate(base.getDate()+days);try{await api('/functions/v1/manage-panel-user',{method:'POST',body:JSON.stringify({action:'update',user_id:u.user_id,display_name:u.display_name,email:u.email,role:u.role,expires_at:base.toISOString()})});showToast('Acesso renovado por '+days+' dias.');loadPanelUsers()}catch(e){alert(e.message||'Não foi possível renovar.')}}
   async function loadPanelUsers(){
     const box=document.getElementById('panelAccessContent');if(!box)return;
     try{
@@ -353,8 +356,9 @@ init();
       window.panelAccessRows=rows;
       if(!rows.length){box.innerHTML='<p>Nenhum acesso cadastrado.</p>';return}
       const roleName={admin:'Administrador',master_ultra:'Master Ultra',master_simples:'Master Simples',revendedor:'Revendedor'};
-      box.innerHTML='<table><thead><tr><th>Nome</th><th>Usuário</th><th>Nível</th><th>Bloqueio</th><th>Ações</th></tr></thead><tbody>'+rows.map(u=>'<tr><td><strong>'+escapeHTML(u.display_name||'—')+'</strong></td><td>'+escapeHTML(u.username||'—')+'</td><td>'+escapeHTML(roleName[u.role]||u.role||'—')+'</td><td><span class="badge '+(u.active?'green':'red')+'">'+(u.active?'Ativo':'Bloqueado')+'</span></td><td><div class="panel-access-actions"><button type="button" class="action-btn" data-access-edit="'+u.user_id+'">Editar</button><button type="button" class="action-btn" data-access-toggle="'+u.user_id+'" data-active="'+u.active+'">'+(u.active?'Bloquear':'Liberar')+'</button><button type="button" class="action-btn danger" data-access-delete="'+u.user_id+'">Excluir</button></div></td></tr>').join('')+'</tbody></table>';
-      box.querySelectorAll('[data-access-edit]').forEach(x=>x.onclick=()=>editPanelUser(x.dataset.accessEdit));
+      box.innerHTML='<table><thead><tr><th>Nome</th><th>Usuário</th><th>Nível</th><th>Bloqueio</th><th>Tempo restante</th><th>Ações</th></tr></thead><tbody>'+rows.map(u=>'<tr><td><strong>'+escapeHTML(u.display_name||'—')+'</strong></td><td>'+escapeHTML(u.username||'—')+'</td><td>'+escapeHTML(roleName[u.role]||u.role||'—')+'</td><td><span class="badge '+(u.active?'green':'red')+'">'+(u.active?'Ativo':'Bloqueado')+'</span></td><td>'+panelExpiryLabel(u)+'</td><td><div class="panel-access-actions">'+(u.role!=='admin'?'<button type="button" class="action-btn" data-access-renew="'+u.user_id+'">Renovar</button>':'')+'<button type="button" class="action-btn" data-access-edit="'+u.user_id+'">Editar</button><button type="button" class="action-btn" data-access-toggle="'+u.user_id+'" data-active="'+u.active+'">'+(u.active?'Bloquear':'Liberar')+'</button><button type="button" class="action-btn danger" data-access-delete="'+u.user_id+'">Excluir</button></div></td></tr>').join('')+'</tbody></table>';
+      box.querySelectorAll('[data-access-renew]').forEach(x=>x.onclick=()=>renewPanelUser(x.dataset.accessRenew));
+       box.querySelectorAll('[data-access-edit]').forEach(x=>x.onclick=()=>editPanelUser(x.dataset.accessEdit));
       box.querySelectorAll('[data-access-toggle]').forEach(x=>x.onclick=()=>togglePanelUser(x.dataset.accessToggle,x.dataset.active==='true'));
       box.querySelectorAll('[data-access-delete]').forEach(x=>x.onclick=()=>deletePanelUser(x.dataset.accessDelete));
     }catch(e){box.innerHTML='<p class="form-error">'+escapeHTML(e.message)+'</p>'}
