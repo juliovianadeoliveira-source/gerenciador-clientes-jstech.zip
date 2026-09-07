@@ -231,7 +231,7 @@ init();
     try{setBusy(true);
       const apps=(c.devices||[]);
       await api('/rest/v1/client_trash',{method:'POST',headers:{Prefer:'return=minimal'},body:JSON.stringify({client_id:c.id,client_name:c.name,snapshot:{client:c,apps}})});
-      await api('/rest/v1/clients?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({deleted_at:new Date().toISOString()})});
+      try{await api('/rest/v1/clients?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({deleted_at:new Date().toISOString()})})}catch(_){await api('/rest/v1/clients?id=eq.'+encodeURIComponent(id),{method:'DELETE'})}
       clients=clients.filter(x=>String(x.id)!==String(id));render();showToast('Cliente movido para a lixeira.');
     }catch(e){alert(e.message||'Não foi possível mover para a lixeira.')}finally{setBusy(false)}
   };
@@ -240,7 +240,7 @@ init();
     const html=rows.length?rows.map(x=>'<div class="history-item"><strong>'+escapeHTML(x.client_name||'Cliente')+'</strong><span>'+dateBR(String(x.deleted_at).slice(0,10))+' <button class="action-btn" data-restore-trash="'+x.id+'" data-client-id="'+x.client_id+'">Restaurar</button></span></div>').join(''):'<p>Nenhum cliente na lixeira.</p>';
     let d=document.getElementById('trashDialog');if(!d){d=document.createElement('dialog');d.id='trashDialog';d.className='modal';d.innerHTML='<div class="modal-head"><div><p class="eyebrow">Recuperação</p><h2>Lixeira</h2></div><button class="icon-btn" data-close-trash>×</button></div><div id="trashContent" class="timeline"></div>';document.body.appendChild(d)}
     d.querySelector('#trashContent').innerHTML=html;d.showModal();
-    d.querySelectorAll('[data-restore-trash]').forEach(b=>b.onclick=async()=>{try{setBusy(true);await api('/rest/v1/clients?id=eq.'+encodeURIComponent(b.dataset.clientId),{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({deleted_at:null})});await api('/rest/v1/client_trash?id=eq.'+encodeURIComponent(b.dataset.restoreTrash),{method:'DELETE'});d.close();await loadData();showToast('Cliente restaurado.')}catch(e){alert(e.message)}finally{setBusy(false)}});
+    d.querySelectorAll('[data-restore-trash]').forEach(b=>b.onclick=async()=>{try{setBusy(true);try{await api('/rest/v1/clients?id=eq.'+encodeURIComponent(b.dataset.clientId),{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify({deleted_at:null})})}catch(_){const tr=await api('/rest/v1/client_trash?id=eq.'+encodeURIComponent(b.dataset.restoreTrash)+'&select=snapshot');const snap=tr[0]?.snapshot?.client;if(!snap)throw new Error('Backup do cliente não encontrado');const made=await api('/rest/v1/clients',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify(fromClient(snap))});if(made[0]&&snap.devices?.length)await syncClientApps(made[0].id,snap)}await api('/rest/v1/client_trash?id=eq.'+encodeURIComponent(b.dataset.restoreTrash),{method:'DELETE'});d.close();await loadData();showToast('Cliente restaurado.')}catch(e){alert(e.message)}finally{setBusy(false)}});
     d.querySelector('[data-close-trash]').onclick=()=>d.close();
   }
   function installTrashButton(){const foot=document.querySelector('.sidebar-foot');if(!foot||document.getElementById('trashBtn'))return;const b=document.createElement('button');b.id='trashBtn';b.className='ghost full';b.textContent='🗑 Lixeira';b.onclick=trashModal;foot.insertBefore(b,document.getElementById('logoutBtn'));}
