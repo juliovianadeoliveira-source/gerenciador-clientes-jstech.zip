@@ -3,6 +3,15 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script>
+    try {
+      if (window.top !== window.self) {
+        window.top.location.replace(window.location.href);
+      }
+    } catch (e) {
+      window.location.href = window.location.href;
+    }
+  </script>
   <meta name="theme-color" content="#08111f">
   <meta name="description" content="Controle particular de clientes, vendas, renovações e vencimentos da JS Tech.">
   <title>JS Tech | Controle de Clientes</title>
