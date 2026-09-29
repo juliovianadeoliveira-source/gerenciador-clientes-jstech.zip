@@ -86,6 +86,62 @@ function whatsappNumber(phone){let n=phone.replace(/\D/g,'');if(n.length===10||n
 
 async function resolvePanelLogin(username,password){if(username===ADMIN_USER){return await api('/auth/v1/token?grant_type=password',{method:'POST',body:JSON.stringify({email:ADMIN_EMAIL,password})})}return await api('/functions/v1/panel-login',{method:'POST',body:JSON.stringify({username,email:'',password})})}
 $('loginForm').addEventListener('submit',async e=>{e.preventDefault();$('loginError').style.color='';$('loginError').textContent='';const username=$('loginUser').value.trim().toLowerCase(),password=$('loginPassword').value;try{setBusy(true);const data=await resolvePanelLogin(username,password);data.expires_at=Math.floor(Date.now()/1000)+data.expires_in;storeSession(data);await enterApp()}catch(e){$('loginError').style.color='';$('loginError').textContent=e.message||'Não foi possível entrar. Confira o usuário e a senha.'}finally{setBusy(false)}});
+$('changePasswordBtn').addEventListener('click',()=>{$('passwordForm').reset();$('passwordError').textContent='';$('passwordDialog').showModal()});
+document.querySelectorAll('.close-password').forEach(b=>b.addEventListener('click',()=>$('passwordDialog').close()));
+$('passwordForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  const current=$('currentPassword').value;
+  const next=$('newPassword').value;
+  const confirm=$('confirmNewPassword').value;
+  const err=$('passwordError');
+  err.textContent='';
+  if(next!==confirm){err.textContent='A confirmação da nova senha não confere.';return}
+  if(next.length<8){err.textContent='A nova senha precisa ter pelo menos 8 caracteres.';return}
+  const email=session?.user?.email||ADMIN_EMAIL;
+  try{
+    setBusy(true);
+    const verifyRes=await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`,{
+      method:'POST',
+      headers:{'apikey':SUPABASE_KEY,'Content-Type':'application/json'},
+      body:JSON.stringify({email,password:current})
+    });
+    const verifyText=await verifyRes.text();
+    let verified={};
+    try{verified=verifyText?JSON.parse(verifyText):{}}catch{verified={message:verifyText}}
+    if(!verifyRes.ok)throw new Error('Senha atual incorreta.');
+
+    const updateRes=await fetch(`${SUPABASE_URL}/auth/v1/user`,{
+      method:'PUT',
+      headers:{
+        'apikey':SUPABASE_KEY,
+        'Authorization':`Bearer ${verified.access_token}`,
+        'Content-Type':'application/json'
+      },
+      body:JSON.stringify({password:next})
+    });
+    const updateText=await updateRes.text();
+    let updated={};
+    try{updated=updateText?JSON.parse(updateText):{}}catch{updated={message:updateText}}
+    if(!updateRes.ok)throw new Error(updated.message||updated.error_description||'Não foi possível alterar a senha.');
+
+    const reloginRes=await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`,{
+      method:'POST',
+      headers:{'apikey':SUPABASE_KEY,'Content-Type':'application/json'},
+      body:JSON.stringify({email,password:next})
+    });
+    const reloginText=await reloginRes.text();
+    let fresh={};
+    try{fresh=reloginText?JSON.parse(reloginText):{}}catch{fresh={message:reloginText}}
+    if(!reloginRes.ok)throw new Error('Senha alterada, mas foi necessário entrar novamente.');
+
+    fresh.expires_at=Math.floor(Date.now()/1000)+Number(fresh.expires_in||3600);
+    storeSession(fresh);
+    $('passwordDialog').close();
+    showToast('Senha alterada com sucesso.');
+  }catch(error){
+    err.textContent=error.message||'Não foi possível alterar a senha.';
+  }finally{setBusy(false)}
+});
 $('logoutBtn').addEventListener('click',async()=>{try{await api('/auth/v1/logout',{method:'POST'})}catch{}clearSession();clients=[];renewals=[];showLogin()});
 $('clientForm').addEventListener('submit',async e=>{e.preventDefault();const id=$('clientId').value,existing=clients.find(c=>c.id===id),oldDue=existing?.dueDate||null,lifetime=$('lifetime').checked,devices=getDevices();if(!devices.length||devices.some(d=>!d.server||!d.appName||!d.username||!d.password)){showToast('Preencha servidor, aplicativo, usuário e senha em todos os dispositivos.');return}const appCost=devices.reduce((total,d)=>total+(d.appPrice===''?0:Number(d.appPrice)||0),0),phoneInput=$('phone').value.trim(),resellerPhoneInput=$('resellerPhone').value.trim(),normalizedPhone=normalizeClientPhone(phoneInput,resellerPhoneInput);if(!normalizedPhone){showToast('Informe um telefone válido com pelo menos 8 dígitos.');$('phone').focus();return}const data={name:$('name').value.trim(),phone:normalizedPhone,devices,startDate:$('startDate').value,plan:$('plan').value,value:Number($('value').value),cost:appCost,resellerName:$('resellerName').value.trim(),resellerPhone:resellerPhoneInput,payment:$('payment').value,notes:$('notes').value.trim(),screens:Number($('screens').value)||1,lifetime,cancelled:existing?.cancelled||false};data.dueDate=lifetime?(existing?.dueDate||calculateDue(data.startDate,data.plan)):($('dueDate').value||$('clientForm').dataset.detectedDue||calculateDue(data.startDate,data.plan));try{setBusy(true);data.resellerId=await ensureReseller(data.resellerName,data.resellerPhone);if(existing){await api(`/rest/v1/clients?id=eq.${id}`,{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify(fromClient(data))});await syncClientApps(id,data);Object.assign(existing,data);await addHistory(existing,'update',oldDue,data.dueDate,`Cadastro atualizado${lifetime?' · Vitalício':''}`);$('clientDialog').close();render();showToast('Cadastro atualizado.')}else{const rows=await api('/rest/v1/clients',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify(fromClient(data))});const c=toClient(rows[0]);await syncClientApps(c.id,data);Object.assign(c,data);clients.push(c);await addHistory(c,'sale',null,c.dueDate,`Venda cadastrada: ${lifetime?'Vitalício':planLabel(c.plan)}`,c.value);$('clientDialog').close();render();showMessage(c,'activation')}}catch(e){alert(e.message)}finally{setBusy(false)}});
 document.querySelectorAll('.close-dialog').forEach(b=>b.addEventListener('click',()=>$('clientDialog').close()));document.querySelectorAll('.close-message').forEach(b=>b.addEventListener('click',()=>$('messageDialog').close()));document.querySelectorAll('.close-history').forEach(b=>b.addEventListener('click',()=>$('historyDialog').close()));
