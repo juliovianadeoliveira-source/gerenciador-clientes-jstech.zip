@@ -65,6 +65,7 @@
       <div class="sidebar-foot">
         <button id="exportBtn" class="nav-item sidebar-action">Fazer backup</button>
         <label class="nav-item sidebar-action file-button">Restaurar backup<input id="importInput" type="file" accept="application/json"></label>
+        <button id="changePasswordBtn" class="nav-item sidebar-action">🔐 Alterar senha</button>
         <button id="logoutBtn" class="nav-item sidebar-action">↪ Sair do painel</button>
       </div>
     </aside>
@@ -264,8 +265,27 @@
     <div class="modal-actions"><button class="ghost" id="copyClientDataBtn" type="button">Copiar todos os dados</button><button class="primary close-client-data" type="button">Fechar</button></div>
   </dialog>
 
+  <dialog id="passwordDialog" class="modal">
+    <form id="passwordForm">
+      <div class="modal-head">
+        <div><p class="eyebrow">Segurança</p><h2>Alterar senha</h2></div>
+        <button type="button" class="icon-btn close-password" aria-label="Fechar">×</button>
+      </div>
+      <div class="form-grid">
+        <label class="wide">Senha atual<input id="currentPassword" type="password" autocomplete="current-password" required minlength="8" placeholder="Digite a senha atual"></label>
+        <label>Nova senha<input id="newPassword" type="password" autocomplete="new-password" required minlength="8" placeholder="Digite a nova senha"></label>
+        <label>Confirmar nova senha<input id="confirmNewPassword" type="password" autocomplete="new-password" required minlength="8" placeholder="Repita a nova senha"></label>
+      </div>
+      <p id="passwordError" class="form-error" role="alert"></p>
+      <div class="modal-actions">
+        <button type="button" class="ghost close-password">Cancelar</button>
+        <button id="savePasswordBtn" class="primary" type="submit">Salvar nova senha</button>
+      </div>
+    </form>
+  </dialog>
+
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <script src="app.js?v=20260929-login-fix"></script>
+  <script src="app.js?v=20260929-password-change"></script>
   <script src="ui-fix.js?v=20260906-1"></script>
 </body>
 </html>
