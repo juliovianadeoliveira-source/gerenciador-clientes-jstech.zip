@@ -86,6 +86,51 @@ function whatsappNumber(phone){let n=phone.replace(/\D/g,'');if(n.length===10||n
 
 async function resolvePanelLogin(username,password){if(username===ADMIN_USER){return await api('/auth/v1/token?grant_type=password',{method:'POST',body:JSON.stringify({email:ADMIN_EMAIL,password})})}return await api('/functions/v1/panel-login',{method:'POST',body:JSON.stringify({username,email:'',password})})}
 $('loginForm').addEventListener('submit',async e=>{e.preventDefault();$('loginError').style.color='';$('loginError').textContent='';const username=$('loginUser').value.trim().toLowerCase(),password=$('loginPassword').value;try{setBusy(true);const data=await resolvePanelLogin(username,password);data.expires_at=Math.floor(Date.now()/1000)+data.expires_in;storeSession(data);await enterApp()}catch(e){$('loginError').style.color='';$('loginError').textContent=e.message||'Não foi possível entrar. Confira o usuário e a senha.'}finally{setBusy(false)}});
+$('resetPasswordBtn').addEventListener('click',async()=>{
+  const err=$('loginError');err.style.color='';err.textContent='';
+  const button=$('resetPasswordBtn');button.disabled=true;
+  try{
+    const redirectTo=window.location.origin+window.location.pathname;
+    const response=await fetch(`${SUPABASE_URL}/auth/v1/recover?redirect_to=${encodeURIComponent(redirectTo)}`,{
+      method:'POST',
+      headers:{apikey:SUPABASE_KEY,'Content-Type':'application/json'},
+      body:JSON.stringify({email:ADMIN_EMAIL})
+    });
+    const body=await response.text();let data={};try{data=body?JSON.parse(body):{}}catch{}
+    if(!response.ok)throw new Error(data.msg||data.message||data.error_description||data.error||'Não foi possível solicitar a recuperação. Tente novamente.');
+    err.style.color='#16803d';
+    err.textContent='Se o e-mail do administrador estiver habilitado para recuperação, enviaremos um link para juliosirlene43@gmail.com. Confira também o spam.';
+  }catch(error){err.style.color='';err.textContent=error.message||'Falha ao solicitar a recuperação.'}
+  finally{button.disabled=false}
+});
+async function startPasswordRecovery(){
+  const params=new URLSearchParams(window.location.hash.slice(1));
+  const token=params.get('access_token');
+  if(params.get('type')!=='recovery'||!token)return false;
+  window.history.replaceState(null,'',window.location.pathname+window.location.search);
+  showLogin();
+  const dialog=document.createElement('dialog');
+  dialog.className='modal';
+  dialog.innerHTML='<form id="jstechRecoveryForm"><div class="modal-head"><div><p class="eyebrow">Segurança</p><h2>Definir nova senha</h2></div></div><div class="form-grid"><label class="wide">Nova senha (mínimo 8 caracteres)<input id="jstechRecoveryPassword" type="password" required minlength="8" autocomplete="new-password"></label><label class="wide">Confirmar nova senha<input id="jstechRecoveryConfirm" type="password" required minlength="8" autocomplete="new-password"></label></div><p id="jstechRecoveryError" class="form-error" role="alert"></p><div class="modal-actions"><button class="primary" type="submit">Salvar nova senha</button></div></form>';
+  document.body.appendChild(dialog);dialog.showModal();
+  const form=dialog.querySelector('#jstechRecoveryForm'),error=dialog.querySelector('#jstechRecoveryError');
+  form.addEventListener('submit',async e=>{
+    e.preventDefault();error.textContent='';error.style.color='';
+    const password=dialog.querySelector('#jstechRecoveryPassword').value;
+    const confirm=dialog.querySelector('#jstechRecoveryConfirm').value;
+    if(password!==confirm){error.textContent='As senhas não coincidem.';return}
+    const submit=form.querySelector('button[type="submit"]');submit.disabled=true;
+    try{
+      const response=await fetch(SUPABASE_URL+'/auth/v1/user',{method:'PUT',headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({password})});
+      const body=await response.text();let data={};try{data=body?JSON.parse(body):{}}catch{}
+      if(!response.ok)throw new Error(data.msg||data.message||data.error_description||data.error||'Não foi possível alterar a senha.');
+      dialog.close();dialog.remove();$('loginError').style.color='#16803d';$('loginError').textContent='Senha atualizada. Entre com o usuário admin e a nova senha.';
+    }catch(err){error.textContent=err.message||'Não foi possível salvar a senha.'}
+    finally{submit.disabled=false}
+  });
+  return true;
+}
+
 $('changePasswordBtn').addEventListener('click',()=>{$('passwordForm').reset();$('passwordError').textContent='';$('passwordDialog').showModal()});
 document.querySelectorAll('.close-password').forEach(b=>b.addEventListener('click',()=>$('passwordDialog').close()));
 $('passwordForm').addEventListener('submit',async e=>{
@@ -172,7 +217,7 @@ const originalSyncClientApps=syncClientApps;syncClientApps=async(id,d)=>{await o
 const originalLoadData=loadData;loadData=async()=>{await originalLoadData();const rows=await api('/rest/v1/client_apps?select=client_id,device_name,m3u_url&active=eq.true');rows.forEach(a=>{const c=clients.find(x=>x.id===a.client_id),d=c?.devices?.find(x=>x.device===a.device_name);if(d)d.m3uUrl=a.m3u_url||''});render()};
 const originalRender=render;render=()=>{originalRender();renderMonthlyReport();addM3UFields()};
 const originalShowClientData=showClientData;showClientData=id=>{originalShowClientData(id);const c=clients.find(x=>x.id===id);document.querySelectorAll('#clientDataContent .data-device').forEach((section,i)=>{const d=c?.devices?.[i];if(appCode(d?.appName)==='clouddy'){const fields=section.querySelector('.data-fields'),box=document.createElement('div');box.innerHTML=`<span>E-mail do Clouddy</span><strong>${escapeHTML(d.email||'—')}</strong>`;fields?.prepend(box)}})};
-init();
+(async()=>{if(await startPasswordRecovery())return;init()})();
 
 // JSTECH AUTO-INTEGRATION START
 /* Ponte de compatibilidade: as melhorias usam a mesma sessão e a mesma API do app.js. */
