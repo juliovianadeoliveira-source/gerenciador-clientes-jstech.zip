@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#101827">
+<title>JS Tech — Novo Gerenciador</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1120;--panel:#141e30;--line:#29364c;--text:#edf3ff;--muted:#9cacc4;--blue:#5b9cff;--green:#37c995;--red:#ff6f7d;--amber:#ffc46b}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 80% 0,#192d4a 0,transparent 34%),var(--bg);font:15px/1.5 system-ui,-apple-system,Segoe UI,sans-serif;color:var(--text)}button,input,select{font:inherit}button{cursor:pointer;border:0;border-radius:10px;padding:11px 15px;background:var(--blue);color:#071426;font-weight:750}button:disabled{opacity:.55;cursor:wait}.ghost{background:#202d42;color:var(--text);border:1px solid var(--line)}input,select{width:100%;border:1px solid var(--line);border-radius:10px;padding:12px;background:#0d1627;color:var(--text);outline:none}input:focus,select:focus{border-color:var(--blue)}label{display:grid;gap:6px;color:var(--muted);font-size:13px}.hidden{display:none!important}.wrap{max-width:1200px;margin:auto;padding:24px}.brand{display:flex;align-items:center;gap:12px}.mark{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(135deg,#68aaff,#4b75f2);font-weight:900;color:#071426}.brand strong{display:block;font-size:18px}.brand span{color:var(--muted);font-size:12px}.login{max-width:420px;margin:9vh auto;background:#141e30;border:1px solid var(--line);border-radius:22px;padding:28px;box-shadow:0 24px 80px #0005}.login h1{font-size:27px;margin:28px 0 5px}.sub{color:var(--muted);margin:0 0 22px}.stack{display:grid;gap:15px}.error{color:#ff9aa4;min-height:22px;font-size:13px}.top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:22px}.actions{display:flex;gap:9px;flex-wrap:wrap}.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin:18px 0}.card,.panel{background:#141e30d9;border:1px solid var(--line);border-radius:17px;padding:18px}.metric span{color:var(--muted);font-size:13px}.metric strong{display:block;font-size:28px;margin-top:5px}.panel-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:15px}.panel h2{font-size:17px;margin:0}.muted{color:var(--muted)}.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}.toolbar input{max-width:340px}.tablewrap{overflow:auto}table{border-collapse:collapse;width:100%;min-width:760px}th,td{text-align:left;padding:12px 10px;border-bottom:1px solid var(--line)}th{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}td{font-size:14px}.pill{display:inline-block;padding:4px 9px;border-radius:99px;font-size:12px;font-weight:700}.paid{background:#123f35;color:#78edc2}.pending{background:#45351e;color:#ffd18a}.overdue{background:#49252f;color:#ff9ba6}.rowactions{display:flex;gap:6px}.rowactions button{padding:7px 9px;font-size:12px}.formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.wide{grid-column:1/-1}.notice{color:var(--muted);font-size:12px;margin-top:14px}.empty{text-align:center;padding:34px;color:var(--muted)}#toast{position:fixed;right:18px;bottom:18px;background:#e9f2ff;color:#111c2c;border-radius:12px;padding:13px 17px;box-shadow:0 8px 35px #0006;max-width:min(440px,calc(100vw - 36px));display:none;z-index:5}#toast.show{display:block}dialog{background:#141e30;color:var(--text);border:1px solid var(--line);border-radius:18px;width:min(620px,calc(100% - 24px));padding:22px}dialog::backdrop{background:#020611c9}.dialoghead{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}.dialoghead h2{margin:0}.foot{display:flex;justify-content:flex-end;gap:9px;margin-top:17px}
+@media(max-width:800px){.wrap{padding:15px}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.top{align-items:flex-start;flex-direction:column}.formgrid{grid-template-columns:1fr}.wide{grid-column:auto}.login{margin:5vh auto;padding:22px}}
+</style>
+</head>
+<body>
+<div id="loginView" class="wrap">
+  <section class="login">
+    <div class="brand"><div class="mark">JS</div><div><strong>JS Tech</strong><span>Novo gerenciador de clientes</span></div></div>
+    <h1>Entrar no painel</h1><p class="sub">Acesse seus clientes e vencimentos com a conta já cadastrada.</p>
+    <form id="loginForm" class="stack">
+      <label>Usuário ou e-mail<input id="username" required autocomplete="username" value="admin"></label>
+      <label>Senha<input id="password" type="password" required autocomplete="current-password" placeholder="Sua senha"></label>
+      <div id="loginError" class="error" role="alert"></div>
+      <button id="loginButton" type="submit">Entrar com segurança</button>
+    </form>
+    <p class="notice">Este painel usa o banco Supabase existente. Não cria nem apaga contas ou clientes.</p>
+  </section>
+</div>
+<div id="appView" class="wrap hidden">
+  <header class="top">
+    <div class="brand"><div class="mark">JS</div><div><strong>JS Tech</strong><span id="signedAs">Painel de clientes</span></div></div>
+    <div class="actions"><button class="ghost" id="backupBtn">Exportar backup</button><button class="ghost" id="logoutBtn">Sair</button><button id="addBtn">+ Novo cliente</button></div>
+  </header>
+  <section class="grid">
+    <article class="card metric"><span>Total de clientes</span><strong id="mTotal">0</strong></article>
+    <article class="card metric"><span>Pagamentos pendentes</span><strong id="mPending">0</strong></article>
+    <article class="card metric"><span>Pagamentos atrasados</span><strong id="mOverdue">0</strong></article>
+    <article class="card metric"><span>Recebido no total</span><strong id="mPaid">R$ 0,00</strong></article>
+  </section>
+  <section class="panel">
+    <div class="panel-head"><div><h2>Clientes</h2><div class="muted" id="listMeta">Dados sincronizados com o Supabase</div></div><button class="ghost" id="reloadBtn">Atualizar</button></div>
+    <div class="toolbar"><input id="search" type="search" placeholder="Buscar nome, telefone ou aplicativo"><select id="statusFilter" style="max-width:190px"><option value="">Todos os pagamentos</option><option value="paid">Pago</option><option value="pending">Pendente</option><option value="overdue">Atrasado</option></select></div>
+    <div class="tablewrap"><table><thead><tr><th>Cliente</th><th>Telefone</th><th>Aplicativo</th><th>Vencimento</th><th>Valor</th><th>Pagamento</th><th>Ações</th></tr></thead><tbody id="rows"></tbody></table><div id="empty" class="empty hidden">Nenhum cliente encontrado. Use “Novo cliente” para cadastrar.</div></div>
+  </section>
+  <p class="notice">A versão original permanece intacta. Este endereço é uma interface nova ligada às mesmas tabelas e regras de acesso.</p>
+</div>
+<dialog id="clientDialog">
+  <form id="clientForm">
+    <div class="dialoghead"><h2>Novo cliente</h2><button class="ghost" type="button" id="closeDialog">Fechar</button></div>
+    <div class="formgrid">
+      <label class="wide">Nome completo<input id="clientName" required minlength="2" maxlength="120"></label>
+      <label>Telefone / WhatsApp<input id="clientPhone" required minlength="8" maxlength="30" placeholder="(27) 99999-9999"></label>
+      <label>Aplicativo<input id="clientApp" required minlength="2" maxlength="80"></label>
+      <label>Data de início<input id="startDate" type="date" required></label>
+      <label>Plano<select id="plan"><option value="30d">30 dias</option><option value="3m">3 meses</option><option value="6m">6 meses</option><option value="1y">1 ano</option></select></label>
+      <label>Valor (R$)<input id="amount" type="number" min="0" step=".01" value="0" required></label>
+      <label>Forma de pagamento<select id="payment"><option>Pix</option><option>Dinheiro</option><option>Cartão</option><option>Transferência</option><option>Outro</option></select></label>
+      <label class="wide">Observações<input id="notes" maxlength="2000"></label>
+    </div>
+    <p class="notice">O vencimento será calculado pelo plano. Os dados são gravados na conta autenticada.</p>
+    <div class="foot"><button type="button" class="ghost" id="cancelDialog">Cancelar</button><button id="saveClient" type="submit">Salvar cliente</button></div>
+  </form>
+</dialog>
+<div id="toast" role="status"></div>
+<script>
+(() => {
+'use strict';
+const URL='https://yifgptxujimzsjoeghte.supabase.co';
+const KEY='sb_publishable_TGA26mIiNQ686GJrvQI3aw_PmfP8V1-';
+const SESSION='jstech_new_panel_session';
+let session=null, clients=[], toastTimer=null;
+const $=id=>document.getElementById(id);
+const money=n=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(Number(n)||0);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function notify(message){const t=$('toast');t.textContent=message;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),3500)}
+function headers(extra={}){return {'apikey':KEY,'Authorization':'Bearer '+(session?.access_token||KEY),'Content-Type':'application/json',...extra}}
+async function request(path,options={}){const res=await fetch(URL+path,{...options,headers:headers(options.headers||{})});const raw=await res.text();let data={};try{data=raw?JSON.parse(raw):{}}catch{data={message:raw}}if(!res.ok)throw new Error(data.message||data.error_description||data.error||data.details||'Falha ao comunicar com o Supabase.');return data}
+function dueDate(start,plan){const d=new Date(start+'T12:00:00');if(plan==='30d')d.setDate(d.getDate()+30);else d.setMonth(d.getMonth()+({'3m':3,'6m':6,'1y':12}[plan]||1));return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')}
+function dateBR(v){if(!v)return '—';const [y,m,d]=String(v).slice(0,10).split('-');return d+'/'+m+'/'+y}
+function paymentLabel(v){return ({paid:'Pago',pending:'Pendente',overdue:'Atrasado'})[v]||'Pendente'}
+function showLogin(message=''){$('loginView').classList.remove('hidden');$('appView').classList.add('hidden');$('loginError').textContent=message}
+function showApp(){$('loginView').classList.add('hidden');$('appView').classList.remove('hidden')}
+async function login(username,password){const r=await fetch(URL+'/functions/v1/panel-login',{method:'POST',headers:{'apikey':KEY,'Content-Type':'application/json'},body:JSON.stringify({username,password})});const data=await r.json().catch(()=>({}));if(!r.ok)throw new Error(data.message||data.error||'Não foi possível entrar.');if(!data.access_token)throw new Error('A autenticação não retornou uma sessão válida.');session=data;localStorage.setItem(SESSION,JSON.stringify(data));}
+async function load(){const q='/rest/v1/clients?select=id,owner_id,name,phone,app_name,start_date,plan,amount,payment_method,notes,due_date,cancelled,lifetime,payment_status,paid_amount,created_at&deleted_at=is.null&order=due_date.asc';clients=await request(q);render()}
+function render(){const term=$('search').value.trim().toLocaleLowerCase('pt-BR'),status=$('statusFilter').value;const filtered=clients.filter(c=>(!status||(c.payment_status||'pending')===status)&&[c.name,c.phone,c.app_name].some(v=>String(v||'').toLocaleLowerCase('pt-BR').includes(term)));$('mTotal').textContent=clients.filter(c=>!c.cancelled).length;$('mPending').textContent=clients.filter(c=>!c.cancelled&&(c.payment_status||'pending')==='pending').length;$('mOverdue').textContent=clients.filter(c=>!c.cancelled&&c.payment_status==='overdue').length;$('mPaid').textContent=money(clients.reduce((sum,c)=>sum+(Number(c.paid_amount)||0),0));$('listMeta').textContent=filtered.length+' de '+clients.length+' cliente(s)';$('rows').innerHTML=filtered.map(c=>{const st=c.payment_status||'pending';return '<tr><td><strong>'+esc(c.name)+'</strong></td><td>'+esc(c.phone)+'</td><td>'+esc(c.app_name)+'</td><td>'+dateBR(c.due_date)+'</td><td>'+money(c.amount)+'</td><td><span class="pill '+esc(st)+'">'+paymentLabel(st)+'</span></td><td><div class="rowactions"><button class="ghost" data-pay="'+esc(c.id)+'" data-status="'+(st==='paid'?'pending':'paid')+'">'+(st==='paid'?'Marcar pendente':'Marcar pago')+'</button></div></td></tr>'}).join('');$('empty').classList.toggle('hidden',filtered.length!==0);document.querySelector('table').classList.toggle('hidden',filtered.length===0)}
+async function setPayment(id,status){const c=clients.find(x=>x.id===id);if(!c)return;const payload={payment_status:status,paid_amount:status==='paid'?Number(c.amount)||0:0,paid_at:status==='paid'?new Date().toISOString():null,updated_at:new Date().toISOString()};await request('/rest/v1/clients?id=eq.'+encodeURIComponent(id),{method:'PATCH',headers:{Prefer:'return=minimal'},body:JSON.stringify(payload)});notify('Pagamento atualizado.');await load()}
+async function addClient(e){e.preventDefault();const btn=$('saveClient');btn.disabled=true;try{const start=$('startDate').value,plan=$('plan').value;const row={owner_id:session.user?.id,name:$('clientName').value.trim(),phone:$('clientPhone').value.trim(),app_name:$('clientApp').value.trim(),start_date:start,plan,amount:Number($('amount').value)||0,payment_method:$('payment').value,notes:$('notes').value.trim(),due_date:dueDate(start,plan),payment_status:'pending',paid_amount:0,cancelled:false,lifetime:false};if(!row.owner_id)throw new Error('Não encontrei o ID do usuário autenticado. Saia e entre novamente.');await request('/rest/v1/clients',{method:'POST',headers:{Prefer:'return=representation'},body:JSON.stringify(row)});$('clientDialog').close();$('clientForm').reset();$('startDate').value=new Date().toISOString().slice(0,10);notify('Cliente cadastrado com sucesso.');await load()}catch(err){notify(err.message)}finally{btn.disabled=false}}
+$('loginForm').addEventListener('submit',async e=>{e.preventDefault();$('loginButton').disabled=true;$('loginError').textContent='';try{await login($('username').value.trim(),$('password').value);showApp();$('signedAs').textContent='Conectado: '+($('username').value.trim());await load()}catch(err){session=null;localStorage.removeItem(SESSION);showLogin(err.message)}finally{$('loginButton').disabled=false}});
+$('logoutBtn').addEventListener('click',()=>{session=null;localStorage.removeItem(SESSION);showLogin();$('password').value=''});
+$('reloadBtn').addEventListener('click',()=>load().catch(e=>notify(e.message)));
+$('search').addEventListener('input',render);$('statusFilter').addEventListener('change',render);
+$('rows').addEventListener('click',e=>{const b=e.target.closest('[data-pay]');if(b)setPayment(b.dataset.pay,b.dataset.status).catch(err=>notify(err.message))});
+$('addBtn').addEventListener('click',()=>{$('startDate').value=new Date().toISOString().slice(0,10);$('clientDialog').showModal()});
+['closeDialog','cancelDialog'].forEach(id=>$(id).addEventListener('click',()=>$('clientDialog').close()));
+$('clientForm').addEventListener('submit',addClient);
+$('backupBtn').addEventListener('click',()=>{const blob=new Blob([JSON.stringify({exported_at:new Date().toISOString(),project:URL,clients},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='jstech-backup-'+new Date().toISOString().slice(0,10)+'.json';a.click();URL.revokeObjectURL(a.href);notify('Backup exportado para seu computador.')});
+const saved=localStorage.getItem(SESSION);if(saved){try{session=JSON.parse(saved);if(session?.access_token){showApp();load().catch(err=>{session=null;localStorage.removeItem(SESSION);showLogin('Sessão expirada. Entre novamente.')})}else showLogin()}catch{showLogin()}}else showLogin();
+})();
+</script>
+</body>
+</html>
