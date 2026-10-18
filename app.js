@@ -90,7 +90,7 @@ $('resetPasswordBtn').addEventListener('click',async()=>{
   const err=$('loginError');err.style.color='';err.textContent='';
   const button=$('resetPasswordBtn');button.disabled=true;
   try{
-    const redirectTo='https://juliovianadeoliveira-source.github.io/gerenciador-clientes-jstech.zip/';
+    const redirectTo='http://gerenciadorcliente.sytes.net/';
     const response=await fetch(`${SUPABASE_URL}/auth/v1/recover?redirect_to=${encodeURIComponent(redirectTo)}`,{
       method:'POST',
       headers:{apikey:SUPABASE_KEY,'Content-Type':'application/json'},
