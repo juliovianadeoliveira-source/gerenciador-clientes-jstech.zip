@@ -84,28 +84,11 @@ function showMessage(c,type){messageClientId=c.id;$('messageTitle').textContent=
 function sendCharge(id){const c=clients.find(c=>c.id===id);if(c)showMessage(c,'charge')}
 function whatsappNumber(phone){let n=phone.replace(/\D/g,'');if(n.length===10||n.length===11)n='55'+n;return n}
 
-async function resolvePanelLogin(username,password){if(username===ADMIN_USER){return await api('/auth/v1/token?grant_type=password',{method:'POST',body:JSON.stringify({email:ADMIN_EMAIL,password})})}return await api('/functions/v1/panel-login',{method:'POST',body:JSON.stringify({username,email:'',password})})}
+async function resolvePanelLogin(username,password){return await api('/functions/v1/panel-login',{method:'POST',body:JSON.stringify({username,email:'',password})})}
 $('loginForm').addEventListener('submit',async e=>{e.preventDefault();$('loginError').style.color='';$('loginError').textContent='';const username=$('loginUser').value.trim().toLowerCase(),password=$('loginPassword').value;try{setBusy(true);const data=await resolvePanelLogin(username,password);data.expires_at=Math.floor(Date.now()/1000)+data.expires_in;storeSession(data);await enterApp()}catch(e){$('loginError').style.color='';$('loginError').textContent=e.message||'Não foi possível entrar. Confira o usuário e a senha.'}finally{setBusy(false)}});
 $('resetPasswordBtn').addEventListener('click',async()=>{
   const err=$('loginError');err.style.color='';err.textContent='';
-  const button=$('resetPasswordBtn');button.disabled=true;
-  try{
-    const redirectTo='http://gerenciadorcliente.sytes.net/';
-    const response=await fetch(`${SUPABASE_URL}/auth/v1/recover?redirect_to=${encodeURIComponent(redirectTo)}`,{
-      method:'POST',
-      headers:{apikey:SUPABASE_KEY,'Content-Type':'application/json'},
-      body:JSON.stringify({email:ADMIN_EMAIL})
-    });
-    const body=await response.text();let data={};try{data=body?JSON.parse(body):{}}catch{}
-    if(!response.ok)throw new Error(data.msg||data.message||data.error_description||data.error||'Não foi possível solicitar a recuperação. Tente novamente.');
-    err.style.color='#16803d';
-    err.textContent='Se o e-mail do administrador estiver habilitado para recuperação, enviaremos um link para juliosirlene43@gmail.com. Confira também o spam.';
-  }catch(error){err.style.color='';err.textContent=error.message||'Falha ao solicitar a recuperação.'}
-  finally{button.disabled=false}
-});
-async function startPasswordRecovery(){
-  const params=new URLSearchParams(window.location.hash.slice(1));
-  const token=params.get('access_token');
+  const button=$('rese;
   if(params.get('type')!=='recovery'||!token)return false;
   window.history.replaceState(null,'',window.location.pathname+window.location.search);
   showLogin();
